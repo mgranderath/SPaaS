@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/magrandera/PiaaS/app"
+
 	"github.com/gorilla/mux"
 	"github.com/magrandera/PiaaS/config"
 	"github.com/magrandera/PiaaS/routing"
@@ -28,7 +30,7 @@ func main() {
 
 		values.ServerPort = *port
 	}
-
+	app.InitDB()
 	router := mux.NewRouter()
 	routing.SetupRouting(router)
 	log.Fatal(http.ListenAndServe(values.ServerPort, router))
