@@ -31,31 +31,34 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 		fmt.Fprintln(w, "----->ERROR: App already exists.")
 		return Application{}, err
 	}
-	fmt.Fprintln(w, "----->Creating Directories.")
+	fmt.Fprintf(w, "----->Creating Application '%s'.\n", name)
+	fmt.Fprintln(w, "----->Creating directories.")
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		fmt.Fprint(w, "----->")
 		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
-	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Success creating directories.")
 	fmt.Fprintln(w, "----->Initializing git repository.")
 	if _, err := git.PlainInit(path, true); err != nil {
 		fmt.Fprint(w, "----->")
 		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
-	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Success initializing git repository.")
+	fmt.Fprintf(w, "----->Repository path: %s\n", path)
 	app := Application{}
 	app.Name = name
 	app.Path = path
-	fmt.Fprintln(w, "----->Creating Database Record.")
+	fmt.Fprintln(w, "----->Creating database record.")
 	if err := db.Write("app", name, app); err != nil {
 		fmt.Fprint(w, "----->")
 		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
-	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Success creating database record.")
+	fmt.Fprintf(w, "----->Application '%s' successfully created.\n", name)
 	return app, nil
 }
 
@@ -73,20 +76,22 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		fmt.Fprintln(w, "----->ERROR: App does not exist.")
 		return false, err
 	}
+	fmt.Fprintf(w, "----->Removing Application '%s'.\n", name)
 	fmt.Fprintln(w, "----->Removing Directories.")
 	if err = os.RemoveAll(path); err != nil {
 		fmt.Fprint(w, "----->")
 		fmt.Fprintln(w, err)
 		return false, err
 	}
-	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Success removing directories.")
 	fmt.Fprintln(w, "----->Deleting Database Record.")
 	if err := db.Delete("app", name); err != nil {
 		fmt.Fprint(w, "----->")
 		fmt.Fprintln(w, err)
 		return false, err
 	}
-	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Success deleting database record.")
+	fmt.Fprintf(w, "----->Application '%s' successfully removed.\n", name)
 	return true, nil
 }
 
@@ -111,7 +116,7 @@ func GetApplications() ([]Application, error) {
 
 // UpdateApplication : Update the state of an application
 func UpdateApplication(w http.ResponseWriter, r *http.Request) {
-
+	//TODO: Implement update function
 }
 
 // GetApplication : Get specific application

@@ -2,7 +2,6 @@ package routing
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/magrandera/PiaaS/server/models"
 	"github.com/magrandera/PiaaS/server/views"
 )
 
@@ -10,9 +9,9 @@ import (
 func SetupRouting(router *mux.Router) {
 	router.HandleFunc("/", views.HomePage)
 
-	router.HandleFunc("/api/app", models.GetApplications).Methods("GET")
-	router.HandleFunc("/api/app/{name}", models.GetApplication).Methods("GET")
-	router.HandleFunc("/api/app/{name}", models.CreateApplication).Methods("POST")
-	router.HandleFunc("/api/app/{name}", models.DeleteApplication).Methods("DELETE")
-	router.HandleFunc("/api/app/{name}", models.UpdateApplication).Methods("PUT")
+	router.HandleFunc("/api/app", getApplications).Methods("GET")
+	router.HandleFunc("/api/app/{name}", getApplication).Methods("GET")
+	router.HandleFunc("/api/app/{name}", createApplication).Methods("POST")
+	router.HandleFunc("/api/app/{name}", deleteApplication).Methods("DELETE")
+	router.HandleFunc("/api/app/{name}", updateApplication).Methods("PUT")
 }
