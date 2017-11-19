@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,56 +21,72 @@ type Application struct {
 func CreateApplication(w *os.File, name string) (Application, error) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
 	appPath := filepath.Join("Applications", name)
 	path := filepath.Join(dir, appPath)
-	if _, err := os.Stat(path); err != nil {
-		if os.IsExist(err) {
-			fmt.Println(err)
-			return Application{}, err
-		}
+	if _, err := os.Stat(path); err == nil {
+		fmt.Fprintln(w, "----->ERROR: App already exists.")
+		return Application{}, err
 	}
-	fmt.Fprintln(w, "-----> Creating Directories.")
+	fmt.Fprintln(w, "----->Creating Directories.")
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
-	fmt.Fprintln(w, "-----> Initializing git repository.")
+	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Initializing git repository.")
 	if _, err := git.PlainInit(path, true); err != nil {
-		fmt.Println(err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
+	fmt.Fprintln(w, "----->Success.")
 	app := Application{}
 	app.Name = name
 	app.Path = path
-	fmt.Fprintln(w, "-----> Creating Database Record.")
+	fmt.Fprintln(w, "----->Creating Database Record.")
 	if err := db.Write("app", name, app); err != nil {
-		fmt.Println("Error", err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return Application{}, err
 	}
+	fmt.Fprintln(w, "----->Success.")
 	return app, nil
 }
 
 // DeleteApplication : Deletes existing Application
-func DeleteApplication(name string) (bool, error) {
+func DeleteApplication(w *os.File, name string) (bool, error) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return false, err
 	}
 	appPath := filepath.Join("Applications", name)
 	path := filepath.Join(dir, appPath)
+	if _, err := os.Stat(path); err != nil {
+		fmt.Fprintln(w, "----->ERROR: App does not exist.")
+		return false, err
+	}
+	fmt.Fprintln(w, "----->Removing Directories.")
 	if err = os.RemoveAll(path); err != nil {
-		fmt.Println("Error", err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return false, err
 	}
+	fmt.Fprintln(w, "----->Success.")
+	fmt.Fprintln(w, "----->Deleting Database Record.")
 	if err := db.Delete("app", name); err != nil {
-		fmt.Println("Error", err)
+		fmt.Fprint(w, "----->")
+		fmt.Fprintln(w, err)
 		return false, err
 	}
+	fmt.Fprintln(w, "----->Success.")
 	return true, nil
 }
 

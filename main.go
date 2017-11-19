@@ -37,9 +37,17 @@ func main() {
 				},
 				{
 					Name:  "add",
-					Usage: "add an applications",
+					Usage: "add an application",
 					Action: func(c *cli.Context) error {
 						command.CreateApplication(c.Args().First())
+						return nil
+					},
+				},
+				{
+					Name:  "remove",
+					Usage: "remove an application",
+					Action: func(c *cli.Context) error {
+						command.DeleteApplication(c.Args().First())
 						return nil
 					},
 				},

@@ -22,3 +22,8 @@ func ListApplications() {
 func CreateApplication(name string) {
 	models.CreateApplication(os.Stdout, name)
 }
+
+// DeleteApplication : Delete existing Application
+func DeleteApplication(name string) {
+	models.DeleteApplication(os.Stdout, name)
+}
