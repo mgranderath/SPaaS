@@ -2,8 +2,8 @@ package routing
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/magrandera/PiaaS/models"
-	"github.com/magrandera/PiaaS/views"
+	"github.com/magrandera/PiaaS/server/models"
+	"github.com/magrandera/PiaaS/server/views"
 )
 
 // SetupRouting : sets up the api urls
