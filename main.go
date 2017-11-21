@@ -14,6 +14,7 @@ func main() {
 	app.Name = "PiaaS"
 	app.Usage = "A Heroku for the Raspberry Pi"
 	models.InitDB()
+	models.InitBuildpacks()
 	app.Commands = []cli.Command{
 		{
 			Name:  "server",
@@ -48,6 +49,14 @@ func main() {
 					Usage: "remove an application",
 					Action: func(c *cli.Context) error {
 						command.DeleteApplication(c.Args().First())
+						return nil
+					},
+				},
+				{
+					Name:  "deploy",
+					Usage: "deploy an application",
+					Action: func(c *cli.Context) error {
+						command.DeployApplication(c.Args().First())
 						return nil
 					},
 				},

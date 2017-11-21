@@ -27,3 +27,7 @@ func CreateApplication(name string) {
 func DeleteApplication(name string) {
 	models.DeleteApplication(os.Stdout, name)
 }
+
+func DeployApplication(name string) {
+	models.DeployApplication(os.Stdout, name)
+}
