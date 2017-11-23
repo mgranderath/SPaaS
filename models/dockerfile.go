@@ -8,10 +8,10 @@ import (
 
 // Dockerfile : stores the template value
 type Dockerfile struct {
-	Buildpack string
+	BuildName string
 }
 
-const dockerfileTemplate = `FROM {{.Buildpack}}
+const dockerfileTemplate = `FROM {{.BuildName}}
 
 WORKDIR /usr/src/app
 
@@ -34,7 +34,12 @@ func CreateDockerfile(app Application) error {
 	}
 	dock := Dockerfile{}
 	if app.Type == "python" {
-		dock.Buildpack = "arm32v6/python:alpine3.6"
+		build := Buildpack{}
+		if err := db.Read("buildpack", "python3", &build); err != nil {
+			printErr(os.Stdout, err)
+			return err
+		}
+		dock.BuildName = build.Name
 	} else {
 		return err
 	}
