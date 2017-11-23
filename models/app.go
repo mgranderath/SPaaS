@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -84,13 +83,28 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 // DeleteApplication : Deletes existing Application
 func DeleteApplication(w *os.File, name string) (bool, error) {
 	home := getHomeFolder()
+	session := sh.NewSession()
 	basePath := filepath.Join(home, "PiaaS-Data")
-	path := filepath.Join(basePath, "Applications", name, "repo")
+	path := filepath.Join(basePath, "Applications", name)
 	if _, err := os.Stat(path); err != nil {
 		printErr(w, "App does not exist.")
 		return false, err
 	}
 	printNormal(w, ("Removing Application '" + name + "'."))
+	printNormal(w, "Deleting Containers.")
+	_, err := session.Command("docker", "rm", "--force", name).Output()
+	if err != nil {
+		printErr(w, err)
+		return false, err
+	}
+	printSuccess(w, "Deleting Images.")
+	printNormal(w, "Deleting Images.")
+	_, err = session.Command("docker", "rmi", name).Output()
+	if err != nil {
+		printErr(w, err)
+		return false, err
+	}
+	printSuccess(w, "Deleting Images.")
 	printNormal(w, "Removing Directories")
 	if err := os.RemoveAll(path); err != nil {
 		printErr(w, err)
@@ -105,30 +119,6 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 	printSuccess(w, "Deleting database record")
 	printSuccess(w, ("Application '" + name + "' successfully removed."))
 	return true, nil
-}
-
-// GetApplications : Get a list of all applications
-func GetApplications() ([]Application, error) {
-	records, err := db.ReadAll("app")
-	if err != nil {
-		fmt.Println("Error", err)
-		return []Application{}, err
-	}
-	applications := []Application{}
-	for _, f := range records {
-		appFound := Application{}
-		if err := json.Unmarshal([]byte(f), &appFound); err != nil {
-			fmt.Println("Error", err)
-			return []Application{}, err
-		}
-		applications = append(applications, appFound)
-	}
-	return applications, nil
-}
-
-// UpdateApplication : Update the state of an application
-func UpdateApplication(w http.ResponseWriter, r *http.Request) {
-	//TODO: Implement update function
 }
 
 // DeployApplication : Deploys the application
@@ -190,8 +180,47 @@ func DeployApplication(w *os.File, name string) {
 	session.Stdout = w
 	session.Stderr = w
 	session.SetDir(path + "/")
-	session.Command("docker", "build", "-t", name, ".").Run()
-	session.Command("docker", "run", "-d", "-p", "5000:5000", "--rm", "--name", name, name).Run()
+	_, err = session.Command("docker", "build", "-t", name, ".").Output()
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+	_, err = session.Command("docker", "run", "-d", "-p", "5000:5000", "--name", name, name).Output()
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+	app.Running = true
+	if err := db.Write("app", name, app); err != nil {
+		printErr(w, err)
+		return
+	}
+}
+
+// StopApplication : Stops the container of a application
+func StopApplication(w *os.File, name string) error {
+	printNormal(w, "Stopping Application '"+name+"'.")
+	session := sh.NewSession()
+	_, err := session.Command("docker", "stop", name).Output()
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	printSuccess(w, "Stopping Application '"+name+"'.")
+	return nil
+}
+
+// StartApplication : starts the application
+func StartApplication(w *os.File, name string) error {
+	printNormal(w, "Starting Application '"+name+"'.")
+	session := sh.NewSession()
+	_, err := session.Command("docker", "start", name).Output()
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	printSuccess(w, "Starting Application '"+name+"'.")
+	return nil
 }
 
 // GetApplication : Get specific application
@@ -202,4 +231,23 @@ func GetApplication(name string) (Application, error) {
 		return Application{}, err
 	}
 	return app, nil
+}
+
+// GetApplications : Get a list of all applications
+func GetApplications() ([]Application, error) {
+	records, err := db.ReadAll("app")
+	if err != nil {
+		fmt.Println("Error", err)
+		return []Application{}, err
+	}
+	applications := []Application{}
+	for _, f := range records {
+		appFound := Application{}
+		if err := json.Unmarshal([]byte(f), &appFound); err != nil {
+			fmt.Println("Error", err)
+			return []Application{}, err
+		}
+		applications = append(applications, appFound)
+	}
+	return applications, nil
 }

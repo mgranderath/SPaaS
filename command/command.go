@@ -28,6 +28,17 @@ func DeleteApplication(name string) {
 	models.DeleteApplication(os.Stdout, name)
 }
 
+// DeployApplication : Deploys the Application
 func DeployApplication(name string) {
 	models.DeployApplication(os.Stdout, name)
+}
+
+// StartApplication : starts the Application
+func StartApplication(name string) {
+	models.StartApplication(os.Stdout, name)
+}
+
+// StopApplication : stops the Application
+func StopApplication(name string) {
+	models.StopApplication(os.Stdout, name)
 }

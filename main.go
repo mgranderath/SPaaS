@@ -60,6 +60,22 @@ func main() {
 						return nil
 					},
 				},
+				{
+					Name:  "start",
+					Usage: "start an application",
+					Action: func(c *cli.Context) error {
+						command.StartApplication(c.Args().First())
+						return nil
+					},
+				},
+				{
+					Name:  "stop",
+					Usage: "stop an application",
+					Action: func(c *cli.Context) error {
+						command.StopApplication(c.Args().First())
+						return nil
+					},
+				},
 			},
 		},
 	}
