@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	sh "github.com/codeskyblue/go-sh"
 	git "gopkg.in/src-d/go-git.v4"
@@ -152,6 +153,14 @@ func DeployApplication(w *os.File, name string) {
 		return
 	}
 	printSuccess(w, "Creating seperate directory for deployment.")
+	dock := Dockerfile{}
+	proc := parseProcfile(path + "/Procfile")
+	for _, el := range proc {
+		if el.Name == "web" {
+			commands := strings.Fields(el.Command)
+			dock.Command = commands
+		}
+	}
 	if fileExists(filepath.Join(path, "requirements.txt")) {
 		printInfo(w, "Python was detected")
 		app.Type = "python"
@@ -170,9 +179,9 @@ func DeployApplication(w *os.File, name string) {
 		printErr(w, err)
 		return
 	}
-	fmt.Println(port)
+	dock.Port = port
 	l.Close()
-	err = CreateDockerfile(app)
+	err = CreateDockerfile(dock, app)
 	if err != nil {
 		printErr(w, err)
 		return

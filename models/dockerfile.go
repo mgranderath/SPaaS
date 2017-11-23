@@ -9,6 +9,9 @@ import (
 // Dockerfile : stores the template value
 type Dockerfile struct {
 	BuildName string
+	Command   []string
+	Length    int
+	Port      string
 }
 
 const dockerfileTemplate = `FROM {{.BuildName}}
@@ -22,17 +25,16 @@ EXPOSE 5000:5000
 
 COPY . .
 
-CMD [ "python3", "app.py" ]
+CMD [{{range $index, $cmd := .Command}}"{{.}}"{{if (ne ($index) ($.Length))}},{{end}}{{end}}]
 `
 
 // CreateDockerfile : create dockerfile
-func CreateDockerfile(app Application) error {
+func CreateDockerfile(dock Dockerfile, app Application) error {
 	t := template.New("Dockerfile template")
 	t, err := t.Parse(dockerfileTemplate)
 	if err != nil {
 		return err
 	}
-	dock := Dockerfile{}
 	if app.Type == "python" {
 		build := Buildpack{}
 		if err := db.Read("buildpack", "python3", &build); err != nil {
@@ -43,6 +45,7 @@ func CreateDockerfile(app Application) error {
 	} else {
 		return err
 	}
+	dock.Length = len(dock.Command) - 1
 	f, err := os.Create(filepath.Join(app.Path, "deploy", "Dockerfile"))
 	if err != nil {
 		return err
