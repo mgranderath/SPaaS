@@ -171,6 +171,7 @@ func DeployApplication(w *os.File, name string) {
 	}
 	dock.Port = port
 	l.Close()
+	printInfo(w, port)
 	err = CreateDockerfile(dock, app)
 	if err != nil {
 		printErr(w, err)
@@ -185,7 +186,7 @@ func DeployApplication(w *os.File, name string) {
 		printErr(w, err)
 		return
 	}
-	_, err = session.Command("docker", "run", "-d", "-p", "5000:5000", "--name", name, name).Output()
+	_, err = session.Command("docker", "run", "-d", "-p", port+":5000", "--name", name, name).Output()
 	if err != nil {
 		printErr(w, err)
 		return
