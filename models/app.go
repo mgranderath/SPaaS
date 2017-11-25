@@ -89,7 +89,6 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 // DeleteApplication : Deletes existing Application
 func DeleteApplication(w *os.File, name string) (bool, error) {
 	home := getHomeFolder()
-	session := sh.NewSession()
 	basePath := filepath.Join(home, "PiaaS-Data")
 	path := filepath.Join(basePath, "Applications", name)
 	if _, err := os.Stat(path); err != nil {
@@ -98,14 +97,22 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 	}
 	printNormal(w, ("Removing Application '" + name + "'."))
 	printNormal(w, "Deleting Containers.")
-	_, err := session.Command("docker", "rm", "--force", name).Output()
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return false, err
+	}
+	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{
+		Force: true,
+	})
 	if err != nil {
 		printErr(w, err)
 		return false, err
 	}
 	printSuccess(w, "Deleting Images.")
 	printNormal(w, "Deleting Images.")
-	_, err = session.Command("docker", "rmi", name).Output()
+	_, err = cli.ImageRemove(ctx, name, types.ImageRemoveOptions{Force: true})
 	if err != nil {
 		printErr(w, err)
 		return false, err
