@@ -171,6 +171,13 @@ func DeployApplication(w *os.File, name string) {
 			printErr(w, err)
 			return
 		}
+	} else if fileExists(filepath.Join(path, "package.json")) {
+		printInfo(w, "NodeJs was detected")
+		app.Type = "nodejs"
+		if err := db.Write("app", name, app); err != nil {
+			printErr(w, err)
+			return
+		}
 	} else {
 		printErr(w, "No type detected.")
 		return
