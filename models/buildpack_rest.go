@@ -16,4 +16,7 @@ func InitBuildpacks() {
 	if err := db.Write("buildpack", "python3", Buildpack{Name: "apihackers/python3"}); err != nil {
 		return
 	}
+	if err := db.Write("buildpack", "nodejs", Buildpack{Name: "node:9-alpine"}); err != nil {
+		return
+	}
 }

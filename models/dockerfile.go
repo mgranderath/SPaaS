@@ -12,14 +12,21 @@ type Dockerfile struct {
 	Command   []string
 	Length    int
 	Port      string
+	Type      string
 }
 
 const dockerfileTemplate = `FROM {{.BuildName}}
 
 WORKDIR /usr/src/app
 
+{{if eq .Type "python"}}
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
+{{end}}
+{{if eq .Type "nodejs"}}
+COPY package*.json ./
+RUN npm install
+{{end}}
 
 EXPOSE 5000:5000
 
@@ -42,8 +49,17 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 			return err
 		}
 		dock.BuildName = build.Name
+		dock.Type = "python"
+	} else if app.Type == "nodejs" {
+		build := Buildpack{}
+		if err := db.Read("buildpack", "nodejs", &build); err != nil {
+			printErr(os.Stdout, err)
+			return err
+		}
+		dock.BuildName = build.Name
+		dock.Type = "nodejs"
 	} else {
-		return err
+		return nil
 	}
 	dock.Length = len(dock.Command) - 1
 	f, err := os.Create(filepath.Join(app.Path, "deploy", "Dockerfile"))
