@@ -224,6 +224,19 @@ func StartApplication(w *os.File, name string) error {
 	return nil
 }
 
+// LogApplication : show the log oft the application
+func LogApplication(w *os.File, name string, tail bool) {
+	printNormal(w, "Logs of '"+name+"'.")
+	session := sh.NewSession()
+	session.Stdout = w
+	session.Stderr = w
+	if tail {
+		session.Command("docker", "logs", "--follow", name).Run()
+	} else {
+		session.Command("docker", "logs", name).Run()
+	}
+}
+
 // GetApplication : Get specific application
 func GetApplication(name string) (Application, error) {
 	app := Application{}

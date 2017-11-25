@@ -42,3 +42,8 @@ func StartApplication(name string) {
 func StopApplication(name string) {
 	models.StopApplication(os.Stdout, name)
 }
+
+// LogApplication : shows logs of an application
+func LogApplication(name string, tail bool) {
+	models.LogApplication(os.Stdout, name, tail)
+}
