@@ -13,10 +13,10 @@ func InitBuildpacks() {
 	if len(records) != 0 {
 		return
 	}
-	if err := db.Write("buildpack", "python3", Buildpack{Name: "arm32v6/python:3"}); err != nil {
+	if err := db.Write("buildpack", "python3", Buildpack{Name: "arm32v6/python:alpine3.6"}); err != nil {
 		return
 	}
-	if err := db.Write("buildpack", "python2", Buildpack{Name: "arm32v6/python:2"}); err != nil {
+	if err := db.Write("buildpack", "nodejs", Buildpack{Name: "arm32v6/node:9-alpine"}); err != nil {
 		return
 	}
 }

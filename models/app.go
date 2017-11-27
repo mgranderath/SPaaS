@@ -1,14 +1,20 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
 	sh "github.com/codeskyblue/go-sh"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -83,7 +89,6 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 // DeleteApplication : Deletes existing Application
 func DeleteApplication(w *os.File, name string) (bool, error) {
 	home := getHomeFolder()
-	session := sh.NewSession()
 	basePath := filepath.Join(home, "PiaaS-Data")
 	path := filepath.Join(basePath, "Applications", name)
 	if _, err := os.Stat(path); err != nil {
@@ -92,14 +97,22 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 	}
 	printNormal(w, ("Removing Application '" + name + "'."))
 	printNormal(w, "Deleting Containers.")
-	_, err := session.Command("docker", "rm", "--force", name).Output()
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return false, err
+	}
+	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{
+		Force: true,
+	})
 	if err != nil {
 		printErr(w, err)
 		return false, err
 	}
 	printSuccess(w, "Deleting Images.")
 	printNormal(w, "Deleting Images.")
-	_, err = session.Command("docker", "rmi", name).Output()
+	_, err = cli.ImageRemove(ctx, name, types.ImageRemoveOptions{Force: true})
 	if err != nil {
 		printErr(w, err)
 		return false, err
@@ -158,10 +171,18 @@ func DeployApplication(w *os.File, name string) {
 			printErr(w, err)
 			return
 		}
+	} else if fileExists(filepath.Join(path, "package.json")) {
+		printInfo(w, "NodeJs was detected")
+		app.Type = "nodejs"
+		if err := db.Write("app", name, app); err != nil {
+			printErr(w, err)
+			return
+		}
 	} else {
 		printErr(w, "No type detected.")
 		return
 	}
+	printNormal(w, "Detecting free port")
 	l, _ := net.Listen("tcp", ":0")
 	hostport := l.Addr().String()
 	_, port, err := net.SplitHostPort(hostport)
@@ -171,25 +192,92 @@ func DeployApplication(w *os.File, name string) {
 	}
 	dock.Port = port
 	l.Close()
+	printInfo(w, "Port allocated: "+port)
+	printNormal(w, "Creating Dockerfile")
 	err = CreateDockerfile(dock, app)
 	if err != nil {
 		printErr(w, err)
 		return
 	}
+	printSuccess(w, "Creating Dockerfile")
+	printNormal(w, "Creating Docker image")
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+
 	session := sh.NewSession()
 	session.Stdout = w
 	session.Stderr = w
 	session.SetDir(path + "/")
-	_, err = session.Command("docker", "build", "-t", name, ".").Output()
+	_, err = session.Command("tar", "cvf", "../package.tar", ".").Output()
 	if err != nil {
 		printErr(w, err)
 		return
 	}
-	_, err = session.Command("docker", "run", "-d", "-p", "5000:5000", "--name", name, name).Output()
+	f, err := os.Open(filepath.Join(path, "..", "package.tar"))
 	if err != nil {
 		printErr(w, err)
-		return
 	}
+	defer f.Close()
+
+	imageBuildResponse, err := cli.ImageBuild(
+		ctx,
+		f,
+		types.ImageBuildOptions{
+			Tags:       []string{name},
+			Dockerfile: "Dockerfile",
+			Remove:     true})
+	if err != nil {
+		printErr(w, err)
+	}
+	type Event struct {
+		Stream string `json:"stream"`
+	}
+	d := json.NewDecoder(imageBuildResponse.Body)
+	var event *Event
+	for {
+		if err := d.Decode(&event); err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			panic(err)
+		}
+		event.Stream = strings.TrimSuffix(event.Stream, "\n")
+		if strings.Contains(event.Stream, "Step") {
+			printInfo(w, event.Stream)
+		}
+	}
+	defer imageBuildResponse.Body.Close()
+	printSuccess(w, "Creating Docker image")
+	printNormal(w, "Creating Container")
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: name,
+		ExposedPorts: nat.PortSet{
+			"5000/tcp": struct{}{},
+		},
+	}, &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"5000/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: port,
+				},
+			},
+		}}, nil, name)
+	if err != nil {
+		printErr(w, err)
+	}
+	printSuccess(w, "Creating Container")
+	printNormal(w, "Starting Container")
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		printErr(w, err)
+	}
+
+	printSuccess(w, "Starting Container")
 	app.Running = true
 	if err := db.Write("app", name, app); err != nil {
 		printErr(w, err)
@@ -200,27 +288,77 @@ func DeployApplication(w *os.File, name string) {
 // StopApplication : Stops the container of a application
 func StopApplication(w *os.File, name string) error {
 	printNormal(w, "Stopping Application '"+name+"'.")
-	session := sh.NewSession()
-	_, err := session.Command("docker", "stop", name).Output()
+	app, err := GetApplication(name)
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	err = cli.ContainerStop(ctx, name, nil)
 	if err != nil {
 		printErr(w, err)
 		return err
 	}
 	printSuccess(w, "Stopping Application '"+name+"'.")
+	app.Running = false
+	if err := db.Write("app", name, app); err != nil {
+		printErr(w, err)
+		return err
+	}
 	return nil
 }
 
 // StartApplication : starts the application
 func StartApplication(w *os.File, name string) error {
 	printNormal(w, "Starting Application '"+name+"'.")
-	session := sh.NewSession()
-	_, err := session.Command("docker", "start", name).Output()
+	app, err := GetApplication(name)
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return err
+	}
+	err = cli.ContainerStart(ctx, name, types.ContainerStartOptions{})
 	if err != nil {
 		printErr(w, err)
 		return err
 	}
 	printSuccess(w, "Starting Application '"+name+"'.")
+	app.Running = true
+	if err := db.Write("app", name, app); err != nil {
+		printErr(w, err)
+		return err
+	}
 	return nil
+}
+
+// LogApplication : show the log oft the application
+func LogApplication(w *os.File, name string, tail bool) {
+	printNormal(w, "Logs of '"+name+"'.")
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+	out, err := cli.ContainerLogs(ctx, name, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     tail})
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+	io.Copy(os.Stdout, out)
 }
 
 // GetApplication : Get specific application

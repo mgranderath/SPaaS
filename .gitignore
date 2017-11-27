@@ -1,6 +1,8 @@
 .vscode
 Applications
 bin
+build
+vendor
 
 *.exe
 *.dll

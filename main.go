@@ -76,6 +76,17 @@ func main() {
 						return nil
 					},
 				},
+				{
+					Name:  "logs",
+					Usage: "log of application",
+					Action: func(c *cli.Context) error {
+						command.LogApplication(c.Args().First(), c.BoolT("tail"))
+						return nil
+					},
+					Flags: []cli.Flag{
+						cli.BoolFlag{Name: "tail", Usage: "Tail the log"},
+					},
+				},
 			},
 		},
 	}
