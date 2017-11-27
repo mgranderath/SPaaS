@@ -24,7 +24,7 @@ A heroku like PaaS for the Raspberry Pi or any linux system.
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+Full explanation available [here](doc/GUIDE.md)
 
 ## Built With
 
@@ -34,11 +34,11 @@ Add additional notes about how to deploy this on a live system
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/magrandera/PiaaS-go/blob/master/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## Authors
 
-* **Malte Granderath** - *Initial work* - [PurpleBooth](https://github.com/magrandera)
+* **Malte Granderath** - *Initial work* - [magrandera](https://github.com/magrandera)
 
 See also the list of [contributors](https://github.com/magrandera/PiaaS-go/graphs/contributors) who participated in this project.
 
