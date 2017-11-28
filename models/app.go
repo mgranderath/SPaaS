@@ -229,7 +229,8 @@ func DeployApplication(w *os.File, name string) {
 		types.ImageBuildOptions{
 			Tags:       []string{name},
 			Dockerfile: "Dockerfile",
-			Remove:     true})
+			Remove:     true,
+			NoCache:    true})
 	if err != nil {
 		printErr(w, err)
 	}
