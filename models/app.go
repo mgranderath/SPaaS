@@ -20,11 +20,13 @@ import (
 
 // Application : stores information about the applications
 type Application struct {
-	Name       string `json:"name"`
-	Running    bool   `json:"running"`
-	Path       string `json:"path"`
-	Repository string `json:"repo"`
-	Type       string `json:"type"`
+	Name        string `json:"name"`
+	Running     bool   `json:"running"`
+	Path        string `json:"path"`
+	Repository  string `json:"repo"`
+	Type        string `json:"type"`
+	Port        string `json:"port"`
+	ContainerID string `json:"containerID"`
 }
 
 // CreateApplication : Creates a new Application
@@ -136,6 +138,7 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 
 // DeployApplication : Deploys the application
 func DeployApplication(w *os.File, name string) {
+	// Create deploy folder
 	printNormal(w, ("Deploying '" + name + "'."))
 	app, err := GetApplication(name)
 	if err != nil {
@@ -147,6 +150,7 @@ func DeployApplication(w *os.File, name string) {
 		printErr(w, err)
 		return
 	}
+	// Clone repository into the deploy directory
 	printNormal(w, "Creating seperate directory for deployment.")
 	_, err = git.PlainClone(path, false, &git.CloneOptions{
 		URL: app.Repository,
@@ -156,6 +160,7 @@ func DeployApplication(w *os.File, name string) {
 		return
 	}
 	printSuccess(w, "Creating seperate directory for deployment.")
+	// Parse the Procfile
 	dock := Dockerfile{}
 	proc := parseProcfile(path + "/Procfile")
 	for _, el := range proc {
@@ -164,24 +169,18 @@ func DeployApplication(w *os.File, name string) {
 			dock.Command = commands
 		}
 	}
+	// Detect the language
 	if fileExists(filepath.Join(path, "requirements.txt")) {
 		printInfo(w, "Python was detected")
 		app.Type = "python"
-		if err := db.Write("app", name, app); err != nil {
-			printErr(w, err)
-			return
-		}
 	} else if fileExists(filepath.Join(path, "package.json")) {
 		printInfo(w, "NodeJs was detected")
 		app.Type = "nodejs"
-		if err := db.Write("app", name, app); err != nil {
-			printErr(w, err)
-			return
-		}
 	} else {
 		printErr(w, "No type detected.")
 		return
 	}
+	// Search for a free port
 	printNormal(w, "Detecting free port")
 	l, _ := net.Listen("tcp", ":0")
 	hostport := l.Addr().String()
@@ -191,8 +190,10 @@ func DeployApplication(w *os.File, name string) {
 		return
 	}
 	dock.Port = port
+	app.Port = port
 	l.Close()
 	printInfo(w, "Port allocated: "+port)
+	// Create Dockerfile
 	printNormal(w, "Creating Dockerfile")
 	err = CreateDockerfile(dock, app)
 	if err != nil {
@@ -201,13 +202,7 @@ func DeployApplication(w *os.File, name string) {
 	}
 	printSuccess(w, "Creating Dockerfile")
 	printNormal(w, "Creating Docker image")
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		printErr(w, err)
-		return
-	}
-
+	// Tar the deploy directory
 	session := sh.NewSession()
 	session.Stdout = w
 	session.Stderr = w
@@ -222,7 +217,14 @@ func DeployApplication(w *os.File, name string) {
 		printErr(w, err)
 	}
 	defer f.Close()
-
+	// Create connection to Docker API
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		printErr(w, err)
+		return
+	}
+	// Build the image
 	imageBuildResponse, err := cli.ImageBuild(
 		ctx,
 		f,
@@ -234,6 +236,7 @@ func DeployApplication(w *os.File, name string) {
 	if err != nil {
 		printErr(w, err)
 	}
+	// Reformat the output
 	type Event struct {
 		Stream string `json:"stream"`
 	}
@@ -255,6 +258,12 @@ func DeployApplication(w *os.File, name string) {
 	defer imageBuildResponse.Body.Close()
 	printSuccess(w, "Creating Docker image")
 	printNormal(w, "Creating Container")
+	// Remove old container
+	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{Force: true})
+	if err != nil && !strings.Contains(err.Error(), "No such container") {
+		printErr(w, err)
+	}
+	// Create Container
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: name,
 		ExposedPorts: nat.PortSet{
@@ -272,12 +281,13 @@ func DeployApplication(w *os.File, name string) {
 	if err != nil {
 		printErr(w, err)
 	}
+	app.ContainerID = resp.ID
 	printSuccess(w, "Creating Container")
 	printNormal(w, "Starting Container")
+	// Start the container
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
 		printErr(w, err)
 	}
-
 	printSuccess(w, "Starting Container")
 	app.Running = true
 	if err := db.Write("app", name, app); err != nil {

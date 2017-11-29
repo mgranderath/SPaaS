@@ -4,8 +4,8 @@ all: build
 
 build: check
 	mkdir -p build
-	GOOS=linux GOARCH=arm GOARM=6 go build -o build/Piaas_arm .
-	go build -o build/Piaas .
+	GOOS=linux GOARCH=arm GOARM=6 go build -o build/PiaaS_arm .
+	go build -o build/PiaaS .
 
 dependencies:
 	glide install --strip-vendor

@@ -42,6 +42,7 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 	if err != nil {
 		return err
 	}
+	dock.Type = app.Type
 	if app.Type == "python" {
 		build := Buildpack{}
 		if err := db.Read("buildpack", "python3", &build); err != nil {
@@ -49,7 +50,6 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 			return err
 		}
 		dock.BuildName = build.Name
-		dock.Type = "python"
 	} else if app.Type == "nodejs" {
 		build := Buildpack{}
 		if err := db.Read("buildpack", "nodejs", &build); err != nil {
@@ -57,7 +57,6 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 			return err
 		}
 		dock.BuildName = build.Name
-		dock.Type = "nodejs"
 	} else {
 		return nil
 	}
