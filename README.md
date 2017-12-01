@@ -1,6 +1,11 @@
-# PiaaS
+# PiaaS [WIP]
 
 A heroku like PaaS for the Raspberry Pi or any linux system.
+
+## Status
+- [ ] Basic web interface
+- [ ] Container tracking
+- [x] Basic deployment functionality
 
 ## Building
 

@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -35,11 +36,12 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 	executable := getExecutablePath()
 	basePath := filepath.Join(home, "PiaaS-Data")
 	path := filepath.Join(basePath, "Applications", name, "repo")
-
+	// Check whether folder exists
 	if _, err := os.Stat(path); err == nil {
 		printErr(w, "App already exists.")
 		return Application{}, err
 	}
+	// Create the folders
 	printNormal(w, "Creating Application '"+name+"'.")
 	printNormal(w, "Creating directories")
 	err := os.MkdirAll(path, os.ModePerm)
@@ -48,12 +50,13 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 		return Application{}, err
 	}
 	printSuccess(w, "Creating directories.")
-
+	// Initlialize the git repository
 	printNormal(w, "Initializing git repository.")
 	if _, err := git.PlainInit(path, true); err != nil {
 		printErr(w, err)
 		return Application{}, err
 	}
+	// Create the post-receive hook
 	err = os.MkdirAll(filepath.Join(path, "hooks"), os.ModePerm)
 	if err != nil {
 		printErr(w, err)
@@ -66,6 +69,7 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 	}
 	defer file.Close()
 	fmt.Fprintf(file, "#!/usr/bin/env bash\n%s/PiaaS app deploy %s\n", executable, name)
+	// Make the hook executable
 	err = os.Chmod(filepath.Join(path, "hooks", "post-receive"), 0755)
 	if err != nil {
 		printErr(w, err)
@@ -73,7 +77,7 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 	}
 	printSuccess(w, "Initializing git repository.")
 	printInfo(w, "Repository path: "+path)
-
+	// Initialize the database record
 	app := Application{}
 	app.Name = name
 	app.Path = filepath.Join(basePath, "Applications", name)
@@ -93,6 +97,7 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 	home := getHomeFolder()
 	basePath := filepath.Join(home, "PiaaS-Data")
 	path := filepath.Join(basePath, "Applications", name)
+	// Check whether app exists
 	if _, err := os.Stat(path); err != nil {
 		printErr(w, "App does not exist.")
 		return false, err
@@ -105,6 +110,7 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		printErr(w, err)
 		return false, err
 	}
+	// Remove the docker container
 	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{
 		Force: true,
 	})
@@ -112,20 +118,23 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		printErr(w, err)
 		return false, err
 	}
-	printSuccess(w, "Deleting Images.")
+	printSuccess(w, "Deleting Containers.")
 	printNormal(w, "Deleting Images.")
+	// Remove the docker image
 	_, err = cli.ImageRemove(ctx, name, types.ImageRemoveOptions{Force: true})
 	if err != nil {
 		printErr(w, err)
 		return false, err
 	}
 	printSuccess(w, "Deleting Images.")
+	// Remove directories
 	printNormal(w, "Removing Directories")
 	if err := os.RemoveAll(path); err != nil {
 		printErr(w, err)
 		return false, err
 	}
 	printSuccess(w, "Removing directories.")
+	// Delete app from the database
 	printNormal(w, "Deleting Database Record.")
 	if err := db.Delete("app", name); err != nil {
 		printErr(w, err)
@@ -304,6 +313,10 @@ func StopApplication(w *os.File, name string) error {
 		printErr(w, err)
 		return err
 	}
+	if app.Name == "" {
+		printErr(w, name+" does not exist!")
+		return errors.New("app does not exist")
+	}
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -331,6 +344,10 @@ func StartApplication(w *os.File, name string) error {
 	if err != nil {
 		printErr(w, err)
 		return err
+	}
+	if app.Name == "" {
+		printErr(w, name+" does not exist!")
+		return errors.New("app does not exist")
 	}
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
