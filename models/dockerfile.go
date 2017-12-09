@@ -27,6 +27,11 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY package*.json ./
 RUN npm install
 {{end}}
+{{if eq .Type "ruby"}}
+COPY Gemfile /usr/app/ 
+COPY Gemfile.lock /usr/app/ 
+RUN bundle install
+{{end}}
 
 EXPOSE 5000:5000
 
@@ -53,6 +58,13 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 	} else if app.Type == "nodejs" {
 		build := Buildpack{}
 		if err := db.Read("buildpack", "nodejs", &build); err != nil {
+			printErr(os.Stdout, err)
+			return err
+		}
+		dock.BuildName = build.Name
+	} else if app.Type == "ruby" {
+		build := Buildpack{}
+		if err := db.Read("buildpack", "ruby", &build); err != nil {
 			printErr(os.Stdout, err)
 			return err
 		}

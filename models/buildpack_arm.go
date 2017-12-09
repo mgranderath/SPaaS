@@ -19,4 +19,7 @@ func InitBuildpacks() {
 	if err := db.Write("buildpack", "nodejs", Buildpack{Name: "arm32v6/node:9-alpine"}); err != nil {
 		return
 	}
+	if err := db.Write("buildpack", "ruby", Buildpack{Name: "arm32v6/ruby:alpine3.6"}); err != nil {
+		return
+	}
 }

@@ -110,13 +110,10 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		printErr(w, err)
 		return false, err
 	}
-	// Remove the docker container
-	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{
-		Force: true,
-	})
-	if err != nil {
+	// Remove the container
+	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{Force: true})
+	if err != nil && !strings.Contains(err.Error(), "No such container") {
 		printErr(w, err)
-		return false, err
 	}
 	printSuccess(w, "Deleting Containers.")
 	printNormal(w, "Deleting Images.")
@@ -185,6 +182,9 @@ func DeployApplication(w *os.File, name string) {
 	} else if fileExists(filepath.Join(path, "package.json")) {
 		printInfo(w, "NodeJs was detected")
 		app.Type = "nodejs"
+	} else if fileExists(filepath.Join(path, "Gemfile")) {
+		printInfo(w, "Ruby was detected")
+		app.Type = "ruby"
 	} else {
 		printErr(w, "No type detected.")
 		return
