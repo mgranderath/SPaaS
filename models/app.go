@@ -119,7 +119,7 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 	printNormal(w, "Deleting Images.")
 	// Remove the docker image
 	_, err = cli.ImageRemove(ctx, name, types.ImageRemoveOptions{Force: true})
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "No such image") {
 		printErr(w, err)
 		return false, err
 	}

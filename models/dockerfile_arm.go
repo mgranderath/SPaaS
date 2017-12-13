@@ -1,4 +1,4 @@
-// +build linux,!arm
+// +build linux,arm
 
 package models
 
@@ -17,7 +17,7 @@ type Dockerfile struct {
 	Type      string
 }
 
-const dockerfileTemplate = `FROM alpine:3.5
+const dockerfileTemplate = `FROM arm32v6/alpine:3.5
 
 WORKDIR /usr/src/app
 

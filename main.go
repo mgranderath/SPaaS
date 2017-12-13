@@ -14,7 +14,6 @@ func main() {
 	app.Name = "PiaaS"
 	app.Usage = "A Heroku for the Raspberry Pi"
 	models.InitDB()
-	models.InitBuildpacks()
 	app.Commands = []cli.Command{
 		{
 			Name:  "server",
