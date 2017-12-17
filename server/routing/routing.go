@@ -9,9 +9,11 @@ import (
 func SetupRouting(router *mux.Router) {
 	router.HandleFunc("/", views.HomePage)
 
-	router.HandleFunc("/api/app", getApplications).Methods("GET")
-	router.HandleFunc("/api/app/{name}", getApplication).Methods("GET")
-	router.HandleFunc("/api/app/{name}", createApplication).Methods("POST")
-	router.HandleFunc("/api/app/{name}", deleteApplication).Methods("DELETE")
-	router.HandleFunc("/api/app/{name}", updateApplication).Methods("PUT")
+	router.HandleFunc("/api/v1/app", getApplications).Methods("GET")
+	router.HandleFunc("/api/v1/app/{name}", getApplication).Methods("GET")
+	router.HandleFunc("/api/v1/app/{name}", createApplication).Methods("POST")
+	router.HandleFunc("/api/v1/app/{name}", deleteApplication).Methods("DELETE")
+	// router.HandleFunc("/api/v1/app/{name}", updateApplication).Methods("PUT")
+
+	router.HandleFunc("/api/v1/deploy/{name}", deployApplication).Methods("POST")
 }

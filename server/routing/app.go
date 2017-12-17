@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/magrandera/PiaaS/models"
+	"github.com/magrandera/PiaaS/server/models"
 )
 
 func createApplication(w http.ResponseWriter, r *http.Request) {
@@ -15,6 +15,8 @@ func createApplication(w http.ResponseWriter, r *http.Request) {
 	app, err := models.CreateApplication(os.Stdout, params["name"])
 	if err != nil {
 		fmt.Fprint(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	js, err := json.Marshal(app)
 	if err != nil {
@@ -30,6 +32,8 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 	app, err := models.GetApplication(params["name"])
 	if err != nil {
 		fmt.Fprint(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	js, err := json.Marshal(app)
 	if err != nil {
@@ -44,6 +48,8 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	apps, err := models.GetApplications()
 	if err != nil {
 		fmt.Fprint(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	js, err := json.Marshal(apps)
 	if err != nil {
@@ -54,8 +60,10 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-func updateApplication(w http.ResponseWriter, r *http.Request) {
-	//TODO: Implement update function
+func deployApplication(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	status := models.DeployApplication(os.Stdout, params["name"])
+	fmt.Fprint(w, status)
 }
 
 func deleteApplication(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +71,8 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	status, err := models.DeleteApplication(os.Stdout, params["name"])
 	if err != nil {
 		fmt.Fprint(w, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	fmt.Fprint(w, status)
 }
