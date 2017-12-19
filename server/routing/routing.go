@@ -13,7 +13,9 @@ func SetupRouting(router *mux.Router) {
 	router.HandleFunc("/api/v1/app/{name}", getApplication).Methods("GET")
 	router.HandleFunc("/api/v1/app/{name}", createApplication).Methods("POST")
 	router.HandleFunc("/api/v1/app/{name}", deleteApplication).Methods("DELETE")
+	router.HandleFunc("/api/v1/app/{name}/start", startApplication).Methods("POST")
+	router.HandleFunc("/api/v1/app/{name}/stop", stopApplication).Methods("POST")
 	// router.HandleFunc("/api/v1/app/{name}", updateApplication).Methods("PUT")
 
-	router.HandleFunc("/api/v1/deploy/{name}", deployApplication).Methods("POST")
+	router.HandleFunc("/api/v1/app/{name}/deploy", deployApplication).Methods("POST")
 }

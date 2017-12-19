@@ -62,8 +62,51 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 
 func deployApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	status := models.DeployApplication(os.Stdout, params["name"])
-	fmt.Fprint(w, status)
+	app, err := models.DeployApplication(os.Stdout, params["name"])
+	if err != nil {
+		models.PrintErr(os.Stdout, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(app)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func startApplication(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	app, err := models.StartApplication(os.Stdout, params["name"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(app)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func stopApplication(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	app, err := models.StopApplication(os.Stdout, params["name"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(app)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 func deleteApplication(w http.ResponseWriter, r *http.Request) {
@@ -74,5 +117,6 @@ func deleteApplication(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, status)
 }

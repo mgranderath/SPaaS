@@ -106,6 +106,29 @@ func main() {
 			Name:  "add",
 			Usage: "add an application",
 			Action: func(c *cli.Context) error {
+				config := getConf()
+				if config.Server == "" {
+					models.PrintErr(os.Stdout, "Config file has not been created. Run setup")
+					return nil
+				}
+				models.PrintNormal(os.Stdout, "Creating "+c.Args().First())
+				client := &http.Client{}
+				req, err := http.NewRequest("POST", "http://"+config.Server+"/api/v1/app/"+c.Args().First(), nil)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				defer resp.Body.Close()
+				app := models.Application{}
+				bodyBytes, _ := ioutil.ReadAll(resp.Body)
+				json.Unmarshal(bodyBytes, &app)
+				models.PrintInfo(os.Stdout, "Repository path: "+app.Repository)
+				models.PrintSuccess(os.Stdout, "Creating "+c.Args().First())
 				return nil
 			},
 		},
@@ -113,6 +136,25 @@ func main() {
 			Name:  "remove",
 			Usage: "remove an application",
 			Action: func(c *cli.Context) error {
+				config := getConf()
+				if config.Server == "" {
+					models.PrintErr(os.Stdout, "Config file has not been created. Run setup")
+					return nil
+				}
+				models.PrintNormal(os.Stdout, "Deleting "+c.Args().First())
+				client := &http.Client{}
+				req, err := http.NewRequest("DELETE", "http://"+config.Server+"/api/v1/app/"+c.Args().First(), nil)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				defer resp.Body.Close()
+				models.PrintSuccess(os.Stdout, "Deleting "+c.Args().First())
 				return nil
 			},
 		},
@@ -120,6 +162,25 @@ func main() {
 			Name:  "deploy",
 			Usage: "deploy an application",
 			Action: func(c *cli.Context) error {
+				config := getConf()
+				if config.Server == "" {
+					models.PrintErr(os.Stdout, "Config file has not been created. Run setup")
+					return nil
+				}
+				models.PrintNormal(os.Stdout, "Deploying Application!")
+				client := &http.Client{}
+				req, err := http.NewRequest("POST", "http://"+config.Server+"/api/v1/app/"+c.Args().First()+"/deploy", nil)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				defer resp.Body.Close()
+				models.PrintSuccess(os.Stdout, "Deploying Application")
 				return nil
 			},
 		},
@@ -127,6 +188,25 @@ func main() {
 			Name:  "start",
 			Usage: "start an application",
 			Action: func(c *cli.Context) error {
+				config := getConf()
+				if config.Server == "" {
+					models.PrintErr(os.Stdout, "Config file has not been created. Run setup")
+					return nil
+				}
+				models.PrintNormal(os.Stdout, "Starting Application!")
+				client := &http.Client{}
+				req, err := http.NewRequest("POST", "http://"+config.Server+"/api/v1/app/"+c.Args().First()+"/start", nil)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				defer resp.Body.Close()
+				models.PrintSuccess(os.Stdout, "Starting Application")
 				return nil
 			},
 		},
@@ -134,6 +214,25 @@ func main() {
 			Name:  "stop",
 			Usage: "stop an application",
 			Action: func(c *cli.Context) error {
+				config := getConf()
+				if config.Server == "" {
+					models.PrintErr(os.Stdout, "Config file has not been created. Run setup")
+					return nil
+				}
+				models.PrintNormal(os.Stdout, "Stopping Application!")
+				client := &http.Client{}
+				req, err := http.NewRequest("POST", "http://"+config.Server+"/api/v1/app/"+c.Args().First()+"/stop", nil)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					models.PrintErr(os.Stdout, err)
+					return nil
+				}
+				defer resp.Body.Close()
+				models.PrintSuccess(os.Stdout, "Stopping Application")
 				return nil
 			},
 		},
