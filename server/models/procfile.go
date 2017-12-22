@@ -9,17 +9,19 @@ import (
 	"regexp"
 )
 
-type procfileEntry struct {
+// ProcfileEntry : Contains the procfile entry
+type ProcfileEntry struct {
 	Name    string
 	Command string
 }
 
-func parseProcfile(path string) (entries []procfileEntry) {
+// ParseProcfile : parse yml files
+func ParseProcfile(path string) (entries []ProcfileEntry) {
 	re, _ := regexp.Compile(`^([\w-]+):\s+(.+)$`)
 
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		return nil
 	}
 	names := make(map[string]bool)
 
@@ -41,12 +43,8 @@ func parseProcfile(path string) (entries []procfileEntry) {
 		}
 		names[name] = true
 
-		entries = append(entries, procfileEntry{name, cmd})
+		entries = append(entries, ProcfileEntry{name, cmd})
 
-	}
-
-	if len(entries) == 0 {
-		fmt.Println("No entries found")
 	}
 
 	return
