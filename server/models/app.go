@@ -33,7 +33,6 @@ type Application struct {
 // CreateApplication : Creates a new Application
 func CreateApplication(w *os.File, name string) (Application, error) {
 	home := GetHomeFolder()
-	executable := getExecutablePath()
 	basePath := filepath.Join(home, "PiaaS-Data")
 	path := filepath.Join(basePath, "Applications", name, "repo")
 	// Check whether folder exists
@@ -68,7 +67,7 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 		return Application{}, err
 	}
 	defer file.Close()
-	fmt.Fprintf(file, "#!/usr/bin/env bash\n%s/PiaaS app deploy %s\n", executable, name)
+	fmt.Fprintf(file, "#!/usr/bin/env bash\ncurl --request POST 'http://127.0.0.1:5000/api/v1/app/%s/deploy'\n", name)
 	// Make the hook executable
 	err = os.Chmod(filepath.Join(path, "hooks", "post-receive"), 0755)
 	if err != nil {

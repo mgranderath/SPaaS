@@ -1,0 +1,11 @@
+Server:
+  Errors:
+    ✔ Automated deployment is messed up right now @started(18-01-23 13:03) @done(18-01-23 13:14) @lasted(11 minutes 31 seconds)
+        ☐ Git push output is just the basic json object
+  Authentication:
+    ☐ Figure out the best way to do the authentication
+
+Command Line:
+  ☐ Improve feedback
+  ☐ Improve error reporting to user
+
