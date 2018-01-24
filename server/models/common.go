@@ -18,6 +18,17 @@ func fileExists(filePath string) bool {
 	return fi.Mode().IsRegular()
 }
 
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
+
 // GetHomeFolder : get filepath to home folder of user
 func GetHomeFolder() string {
 	usr, err := user.Current()
