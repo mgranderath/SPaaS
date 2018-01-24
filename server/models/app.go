@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,10 +11,7 @@ import (
 	"strings"
 
 	sh "github.com/codeskyblue/go-sh"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
+	"github.com/magrandera/PiaaS/server/docker"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -41,16 +37,12 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 		return Application{}, err
 	}
 	// Create the folders
-	PrintNormal(w, "Creating Application '"+name+"'.")
-	PrintNormal(w, "Creating directories")
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	PrintSuccess(w, "Creating directories.")
 	// Initlialize the git repository
-	PrintNormal(w, "Initializing git repository.")
 	if _, err := git.PlainInit(path, true); err != nil {
 		PrintErr(w, err)
 		return Application{}, err
@@ -74,20 +66,15 @@ func CreateApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	PrintSuccess(w, "Initializing git repository.")
-	PrintInfo(w, "Repository path: "+path)
 	// Initialize the database record
 	app := Application{}
 	app.Name = name
 	app.Path = filepath.Join(basePath, "Applications", name)
 	app.Repository = path
-	PrintNormal(w, "Creating database record.")
 	if err := db.Write("app", name, app); err != nil {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	PrintSuccess(w, "Creating database record.")
-	PrintSuccess(w, ("Application '" + name + "' successfully created."))
 	return app, nil
 }
 
@@ -101,50 +88,34 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		PrintErr(w, "App does not exist.")
 		return false, err
 	}
-	PrintNormal(w, ("Removing Application '" + name + "'."))
-	PrintNormal(w, "Deleting Containers.")
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	dock, err := docker.New()
 	if err != nil {
-		PrintErr(w, err)
 		return false, err
 	}
 	// Remove the container
-	err = cli.ContainerRemove(ctx, "pi-"+name, types.ContainerRemoveOptions{Force: true})
-	if err != nil && !strings.Contains(err.Error(), "No such container") {
-		PrintErr(w, err)
-	}
-	PrintSuccess(w, "Deleting Containers.")
-	PrintNormal(w, "Deleting Images.")
-	// Remove the docker image
-	_, err = cli.ImageRemove(ctx, "pi-"+name, types.ImageRemoveOptions{Force: true})
-	if err != nil && !strings.Contains(err.Error(), "No such image") {
-		PrintErr(w, err)
+	if err = dock.RemoveContainer(name); err != nil {
 		return false, err
 	}
-	PrintSuccess(w, "Deleting Images.")
+	// Remove the docker image
+	if err = dock.RemoveImage(name); err != nil {
+		return false, err
+	}
 	// Remove directories
-	PrintNormal(w, "Removing Directories")
 	if err := os.RemoveAll(path); err != nil {
 		PrintErr(w, err)
 		return false, err
 	}
-	PrintSuccess(w, "Removing directories.")
 	// Delete app from the database
-	PrintNormal(w, "Deleting Database Record.")
 	if err := db.Delete("app", name); err != nil {
 		PrintErr(w, err)
 		return false, err
 	}
-	PrintSuccess(w, "Deleting database record")
-	PrintSuccess(w, ("Application '" + name + "' successfully removed."))
 	return true, nil
 }
 
 // DeployApplication : Deploys the application
 func DeployApplication(w *os.File, name string) (Application, error) {
 	// Create deploy folder
-	PrintNormal(w, ("Deploying '" + name + "'."))
 	app, err := GetApplication(name)
 	if err != nil {
 		PrintErr(w, err)
@@ -156,7 +127,6 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 		return Application{}, err
 	}
 	// Clone repository into the deploy directory
-	PrintNormal(w, "Creating seperate directory for deployment.")
 	_, err = git.PlainClone(path, false, &git.CloneOptions{
 		URL: app.Repository,
 	})
@@ -164,32 +134,27 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	PrintSuccess(w, "Creating seperate directory for deployment.")
 	// Parse the Procfile
-	dock := Dockerfile{}
+	dockerfile := Dockerfile{}
 	proc := ParseProcfile(path + "/Procfile")
 	for _, el := range proc {
 		if el.Name == "web" {
 			commands := strings.Fields(el.Command)
-			dock.Command = commands
+			dockerfile.Command = commands
 		}
 	}
 	// Detect the language
 	if fileExists(filepath.Join(path, "requirements.txt")) {
-		PrintInfo(w, "Python was detected")
 		app.Type = "python"
 	} else if fileExists(filepath.Join(path, "package.json")) {
-		PrintInfo(w, "NodeJs was detected")
 		app.Type = "nodejs"
 	} else if fileExists(filepath.Join(path, "Gemfile")) {
-		PrintInfo(w, "Ruby was detected")
 		app.Type = "ruby"
 	} else {
 		PrintErr(w, "No type detected.")
 		return Application{}, errors.New("no type detected")
 	}
 	// Search for a free port
-	PrintNormal(w, "Detecting free port")
 	l, _ := net.Listen("tcp", ":0")
 	hostport := l.Addr().String()
 	_, port, err := net.SplitHostPort(hostport)
@@ -197,19 +162,15 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	dock.Port = port
+	dockerfile.Port = port
 	app.Port = port
 	l.Close()
-	PrintInfo(w, "Port allocated: "+port)
 	// Create Dockerfile
-	PrintNormal(w, "Creating Dockerfile")
-	err = CreateDockerfile(dock, app)
+	err = CreateDockerfile(dockerfile, app)
 	if err != nil {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	PrintSuccess(w, "Creating Dockerfile")
-	PrintNormal(w, "Creating Docker image")
 	// Tar the deploy directory
 	session := sh.NewSession()
 	session.Stdout = w
@@ -227,30 +188,19 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 	}
 	defer f.Close()
 	// Create connection to Docker API
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	dock, err := docker.New()
 	if err != nil {
-		PrintErr(w, err)
 		return Application{}, err
 	}
-	// Build the image
-	imageBuildResponse, err := cli.ImageBuild(
-		ctx,
-		f,
-		types.ImageBuildOptions{
-			Tags:       []string{"pi-" + name},
-			Dockerfile: "Dockerfile",
-			Remove:     true,
-			NoCache:    true})
+	buildRespoonse, err := dock.BuildImage(f, name)
 	if err != nil {
-		PrintErr(w, err)
 		return Application{}, err
 	}
 	// Reformat the output
 	type Event struct {
 		Stream string `json:"stream"`
 	}
-	d := json.NewDecoder(imageBuildResponse.Body)
+	d := json.NewDecoder(buildRespoonse.Body)
 	var event *Event
 	for {
 		if err := d.Decode(&event); err != nil {
@@ -261,47 +211,23 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 		}
 		event.Stream = strings.TrimSuffix(event.Stream, "\n")
 		if strings.Contains(event.Stream, "Step") {
-			PrintInfo(w, event.Stream)
 		}
 	}
-	defer imageBuildResponse.Body.Close()
-	PrintSuccess(w, "Creating Docker image")
-	PrintNormal(w, "Creating Container")
+	defer buildRespoonse.Body.Close()
 	// Remove old container
-	err = cli.ContainerRemove(ctx, "pi-"+name, types.ContainerRemoveOptions{Force: true})
-	if err != nil && !strings.Contains(err.Error(), "No such container") {
-		PrintErr(w, err)
+	if err = dock.RemoveContainer(name); err != nil {
 		return Application{}, err
 	}
 	// Create Container
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "pi-" + name,
-		Env:   []string{"VIRTUAL_HOST=" + name + ".granderath.tech"},
-		ExposedPorts: nat.PortSet{
-			"5000/tcp": struct{}{},
-		},
-	}, &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"5000/tcp": []nat.PortBinding{
-				{
-					HostIP:   "0.0.0.0",
-					HostPort: port,
-				},
-			},
-		}}, nil, "pi-"+name)
+	createResponse, err := dock.BuildContainer(name, port)
 	if err != nil {
-		PrintErr(w, err)
 		return Application{}, err
 	}
-	app.ContainerID = resp.ID
-	PrintSuccess(w, "Creating Container")
-	PrintNormal(w, "Starting Container")
+	app.ContainerID = createResponse.ID
 	// Start the container
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		PrintErr(w, err)
+	if err = dock.StartContainer(name); err != nil {
 		return Application{}, err
 	}
-	PrintSuccess(w, "Starting Container")
 	app.Running = true
 	if err := db.Write("app", name, app); err != nil {
 		PrintErr(w, err)
@@ -312,7 +238,6 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 
 // StopApplication : Stops the container of a application
 func StopApplication(w *os.File, name string) (Application, error) {
-	PrintNormal(w, "Stopping Application '"+name+"'.")
 	app, err := GetApplication(name)
 	if err != nil {
 		PrintErr(w, err)
@@ -322,18 +247,13 @@ func StopApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, name+" does not exist!")
 		return Application{}, errors.New("app does not exist")
 	}
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	dock, err := docker.New()
 	if err != nil {
-		PrintErr(w, err)
 		return Application{}, err
 	}
-	err = cli.ContainerStop(ctx, "pi-"+name, nil)
-	if err != nil {
-		PrintErr(w, err)
+	if err := dock.StopContainer(name); err != nil {
 		return Application{}, err
 	}
-	PrintSuccess(w, "Stopping Application '"+name+"'.")
 	app.Running = false
 	if err := db.Write("app", name, app); err != nil {
 		PrintErr(w, err)
@@ -344,7 +264,6 @@ func StopApplication(w *os.File, name string) (Application, error) {
 
 // StartApplication : starts the application
 func StartApplication(w *os.File, name string) (Application, error) {
-	PrintNormal(w, "Starting Application '"+name+"'.")
 	app, err := GetApplication(name)
 	if err != nil {
 		PrintErr(w, err)
@@ -354,44 +273,19 @@ func StartApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, name+" does not exist!")
 		return Application{}, errors.New("app does not exist")
 	}
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	dock, err := docker.New()
 	if err != nil {
-		PrintErr(w, err)
 		return Application{}, err
 	}
-	err = cli.ContainerStart(ctx, "pi-"+name, types.ContainerStartOptions{})
-	if err != nil {
-		PrintErr(w, err)
+	if err = dock.StartContainer(name); err != nil {
 		return Application{}, err
 	}
-	PrintSuccess(w, "Starting Application '"+name+"'.")
 	app.Running = true
 	if err := db.Write("app", name, app); err != nil {
 		PrintErr(w, err)
 		return Application{}, err
 	}
 	return app, nil
-}
-
-// LogApplication : show the log oft the application
-func LogApplication(w *os.File, name string, tail bool) {
-	PrintNormal(w, "Logs of '"+name+"'.")
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		PrintErr(w, err)
-		return
-	}
-	out, err := cli.ContainerLogs(ctx, "pi-"+name, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     tail})
-	if err != nil {
-		PrintErr(w, err)
-		return
-	}
-	io.Copy(os.Stdout, out)
 }
 
 // GetApplication : Get specific application

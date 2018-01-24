@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/user"
-	"path/filepath"
 
 	color "github.com/logrusorgru/aurora"
 )
@@ -26,14 +25,6 @@ func GetHomeFolder() string {
 		log.Fatal(err)
 	}
 	return usr.HomeDir
-}
-
-func getExecutablePath() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dir
 }
 
 // PrintErr : prints an error
