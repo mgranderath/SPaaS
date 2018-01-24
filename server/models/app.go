@@ -110,14 +110,14 @@ func DeleteApplication(w *os.File, name string) (bool, error) {
 		return false, err
 	}
 	// Remove the container
-	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{Force: true})
+	err = cli.ContainerRemove(ctx, "pi-"+name, types.ContainerRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such container") {
 		PrintErr(w, err)
 	}
 	PrintSuccess(w, "Deleting Containers.")
 	PrintNormal(w, "Deleting Images.")
 	// Remove the docker image
-	_, err = cli.ImageRemove(ctx, name, types.ImageRemoveOptions{Force: true})
+	_, err = cli.ImageRemove(ctx, "pi-"+name, types.ImageRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such image") {
 		PrintErr(w, err)
 		return false, err
@@ -238,7 +238,7 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 		ctx,
 		f,
 		types.ImageBuildOptions{
-			Tags:       []string{name},
+			Tags:       []string{"pi-" + name},
 			Dockerfile: "Dockerfile",
 			Remove:     true,
 			NoCache:    true})
@@ -268,14 +268,14 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 	PrintSuccess(w, "Creating Docker image")
 	PrintNormal(w, "Creating Container")
 	// Remove old container
-	err = cli.ContainerRemove(ctx, name, types.ContainerRemoveOptions{Force: true})
+	err = cli.ContainerRemove(ctx, "pi-"+name, types.ContainerRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such container") {
 		PrintErr(w, err)
 		return Application{}, err
 	}
 	// Create Container
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: name,
+		Image: "pi-" + name,
 		Env:   []string{"VIRTUAL_HOST=" + name + ".granderath.tech"},
 		ExposedPorts: nat.PortSet{
 			"5000/tcp": struct{}{},
@@ -288,7 +288,7 @@ func DeployApplication(w *os.File, name string) (Application, error) {
 					HostPort: port,
 				},
 			},
-		}}, nil, name)
+		}}, nil, "pi-"+name)
 	if err != nil {
 		PrintErr(w, err)
 		return Application{}, err
@@ -328,7 +328,7 @@ func StopApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	err = cli.ContainerStop(ctx, name, nil)
+	err = cli.ContainerStop(ctx, "pi-"+name, nil)
 	if err != nil {
 		PrintErr(w, err)
 		return Application{}, err
@@ -360,7 +360,7 @@ func StartApplication(w *os.File, name string) (Application, error) {
 		PrintErr(w, err)
 		return Application{}, err
 	}
-	err = cli.ContainerStart(ctx, name, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, "pi-"+name, types.ContainerStartOptions{})
 	if err != nil {
 		PrintErr(w, err)
 		return Application{}, err
@@ -383,7 +383,7 @@ func LogApplication(w *os.File, name string, tail bool) {
 		PrintErr(w, err)
 		return
 	}
-	out, err := cli.ContainerLogs(ctx, name, types.ContainerLogsOptions{
+	out, err := cli.ContainerLogs(ctx, "pi-"+name, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     tail})
