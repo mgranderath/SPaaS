@@ -12,7 +12,7 @@ var db *scribble.Driver
 // InitDB : Initialize the database connection
 func InitDB() {
 	var err error
-	dir := filepath.Join(getHomeFolder(), "PiaaS-Data")
+	dir := filepath.Join(GetHomeFolder(), "PiaaS-Data")
 	path := filepath.Join(dir, "Database")
 	db, err = scribble.New(path, nil)
 	if err != nil {

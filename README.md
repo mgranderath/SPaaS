@@ -1,6 +1,11 @@
-# PiaaS
+# PiaaS [WIP]
 
 A heroku like PaaS for the Raspberry Pi or any linux system.
+
+## Status
+- [ ] Basic web interface
+- [ ] Container tracking
+- [x] Basic deployment functionality
 
 ## Building
 
@@ -16,13 +21,13 @@ A heroku like PaaS for the Raspberry Pi or any linux system.
     ```shell
     glide install --strip-vendor
     ```
-+ build the binary using the makefile
++ build the binaries using the makefile
     ```shell
     make
     ```
-+ binary is in the build folder
++ binaries will be in /build folder
 
-## Deployment
+## Installation & Usage
 
 Full explanation available [here](doc/GUIDE.md)
 

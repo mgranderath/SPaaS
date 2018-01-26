@@ -1,3 +1,5 @@
+// +build linux,arm
+
 package models
 
 import (
@@ -15,17 +17,33 @@ type Dockerfile struct {
 	Type      string
 }
 
-const dockerfileTemplate = `FROM {{.BuildName}}
+const dockerfileTemplate = `FROM arm32v6/alpine:3.5
 
 WORKDIR /usr/src/app
 
 {{if eq .Type "python"}}
-COPY requirements.txt ./
+RUN apk add --no-cache python3 && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --upgrade pip setuptools && \
+    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
+    if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
+    rm -r /root/.cache
+COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 {{end}}
 {{if eq .Type "nodejs"}}
+RUN apk update && apk upgrade && apk add nodejs
 COPY package*.json ./
 RUN npm install
+{{end}}
+{{if eq .Type "ruby"}}
+RUN apk update && \
+    apk upgrade && \
+    apk add ruby
+COPY Gemfile /usr/src/app/Gemfile
+COPY Gemfile.lock /usr/src/app/Gemfile.lock 
+RUN bundle install
 {{end}}
 
 EXPOSE 5000:5000
@@ -42,25 +60,7 @@ func CreateDockerfile(dock Dockerfile, app Application) error {
 	if err != nil {
 		return err
 	}
-	if app.Type == "python" {
-		build := Buildpack{}
-		if err := db.Read("buildpack", "python3", &build); err != nil {
-			printErr(os.Stdout, err)
-			return err
-		}
-		dock.BuildName = build.Name
-		dock.Type = "python"
-	} else if app.Type == "nodejs" {
-		build := Buildpack{}
-		if err := db.Read("buildpack", "nodejs", &build); err != nil {
-			printErr(os.Stdout, err)
-			return err
-		}
-		dock.BuildName = build.Name
-		dock.Type = "nodejs"
-	} else {
-		return nil
-	}
+	dock.Type = app.Type
 	dock.Length = len(dock.Command) - 1
 	f, err := os.Create(filepath.Join(app.Path, "deploy", "Dockerfile"))
 	if err != nil {
