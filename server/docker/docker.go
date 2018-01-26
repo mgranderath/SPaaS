@@ -13,29 +13,29 @@ import (
 
 // Docker : struct that contains the connection information to the docker socket
 type Docker struct {
-	ctx context.Context
-	cli *client.Client
+	Ctx context.Context
+	Cli *client.Client
 }
 
 // New : creates a new connection to the docker socket
 func New() (Docker, error) {
 	dock := Docker{}
-	dock.ctx = context.Background()
-	cli, err := client.NewEnvClient()
+	dock.Ctx = context.Background()
+	Cli, err := client.NewEnvClient()
 	if err != nil {
 		return Docker{}, err
 	}
-	dock.cli = cli
+	dock.Cli = Cli
 	return dock, nil
 }
 
 // BuildImage : builds a docker image from a tar file
 func (dock Docker) BuildImage(tarfile *os.File, name string) (types.ImageBuildResponse, error) {
-	imageBuildResponse, err := dock.cli.ImageBuild(
-		dock.ctx,
+	imageBuildResponse, err := dock.Cli.ImageBuild(
+		dock.Ctx,
 		tarfile,
 		types.ImageBuildOptions{
-			Tags:       []string{"pi-" + name},
+			Tags:       []string{name},
 			Dockerfile: "Dockerfile",
 			Remove:     true,
 			NoCache:    true})
@@ -47,7 +47,7 @@ func (dock Docker) BuildImage(tarfile *os.File, name string) (types.ImageBuildRe
 
 // RemoveImage : removes a docker image
 func (dock Docker) RemoveImage(name string) error {
-	_, err := dock.cli.ImageRemove(dock.ctx, "pi-"+name, types.ImageRemoveOptions{Force: true})
+	_, err := dock.Cli.ImageRemove(dock.Ctx, name, types.ImageRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such image") {
 		return err
 	}
@@ -55,10 +55,10 @@ func (dock Docker) RemoveImage(name string) error {
 }
 
 // BuildContainer : builds a docker container
-func (dock Docker) BuildContainer(name string, port string) (container.ContainerCreateCreatedBody, error) {
-	response, err := dock.cli.ContainerCreate(dock.ctx, &container.Config{
-		Image: "pi-" + name,
-		Env:   []string{"VIRTUAL_HOST=" + name + ".granderath.tech"},
+func (dock Docker) BuildContainer(name string, image string, hostname string, port string) (container.ContainerCreateCreatedBody, error) {
+	response, err := dock.Cli.ContainerCreate(dock.Ctx, &container.Config{
+		Image: name,
+		Env:   []string{"VIRTUAL_HOST=" + hostname + ".granderath.tech"},
 		ExposedPorts: nat.PortSet{
 			"5000/tcp": struct{}{},
 		},
@@ -70,7 +70,7 @@ func (dock Docker) BuildContainer(name string, port string) (container.Container
 					HostPort: port,
 				},
 			},
-		}}, nil, "pi-"+name)
+		}}, nil, name)
 	if err != nil {
 		return response, err
 	}
@@ -79,7 +79,7 @@ func (dock Docker) BuildContainer(name string, port string) (container.Container
 
 // RemoveContainer : removes a docker container
 func (dock Docker) RemoveContainer(name string) error {
-	err := dock.cli.ContainerRemove(dock.ctx, "pi-"+name, types.ContainerRemoveOptions{Force: true})
+	err := dock.Cli.ContainerRemove(dock.Ctx, name, types.ContainerRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such container") {
 		return err
 	}
@@ -88,15 +88,24 @@ func (dock Docker) RemoveContainer(name string) error {
 
 // StartContainer : starts a docker container
 func (dock Docker) StartContainer(name string) error {
-	err := dock.cli.ContainerStart(dock.ctx, "pi-"+name, types.ContainerStartOptions{})
+	err := dock.Cli.ContainerStart(dock.Ctx, name, types.ContainerStartOptions{})
 	return err
 }
 
 // StopContainer : stops a docker container
 func (dock Docker) StopContainer(name string) error {
-	err := dock.cli.ContainerStop(dock.ctx, "pi-"+name, nil)
+	err := dock.Cli.ContainerStop(dock.Ctx, name, nil)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// ListContainers : returns a list of docker containers
+func (dock Docker) ListContainers() ([]types.Container, error) {
+	containers, err := dock.Cli.ContainerList(dock.Ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		return containers, err
+	}
+	return containers, nil
 }

@@ -9,6 +9,10 @@ import (
 	color "github.com/logrusorgru/aurora"
 )
 
+func piName(name string) string {
+	return "pi-" + name
+}
+
 func fileExists(filePath string) bool {
 	fi, err := os.Stat(filePath)
 	if err != nil {

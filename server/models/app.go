@@ -54,7 +54,9 @@ func CreateApplication(name string) (Application, error) {
 		return Application{}, err
 	}
 	defer file.Close()
-	fmt.Fprintf(file, "#!/usr/bin/env bash\ncurl --request POST 'http://127.0.0.1:5000/api/v1/app/%s/deploy'\n", name)
+	fmt.Fprintf(file, "#!/usr/bin/env bash\necho \"Starting deploy!\"\n"+
+		"curl --request POST 'http://127.0.0.1:5000/api/v1/app/%s/deploy' |"+
+		"python -c 'import json,sys;obj=json.load(sys.stdin);print \"Successfully deployed!\";print \"Port: \"+obj[\"port\"]'\n", name)
 	// Make the hook executable
 	err = os.Chmod(filepath.Join(path, "hooks", "post-receive"), 0755)
 	if err != nil {
@@ -85,11 +87,11 @@ func DeleteApplication(name string) (bool, error) {
 		return false, err
 	}
 	// Remove the container
-	if err = dock.RemoveContainer(name); err != nil {
+	if err = dock.RemoveContainer(piName(name)); err != nil {
 		return false, err
 	}
 	// Remove the docker image
-	if err = dock.RemoveImage(name); err != nil {
+	if err = dock.RemoveImage(piName(name)); err != nil {
 		return false, err
 	}
 	// Remove directories
@@ -170,7 +172,7 @@ func DeployApplication(name string) (Application, error) {
 	if err != nil {
 		return Application{}, err
 	}
-	buildResponse, err := dock.BuildImage(f, name)
+	buildResponse, err := dock.BuildImage(f, piName(name))
 	if err != nil {
 		return Application{}, err
 	}
@@ -193,17 +195,17 @@ func DeployApplication(name string) (Application, error) {
 	}
 	defer buildResponse.Body.Close()
 	// Remove old container
-	if err = dock.RemoveContainer(name); err != nil {
+	if err = dock.RemoveContainer(piName(name)); err != nil {
 		return Application{}, err
 	}
 	// Create Container
-	createResponse, err := dock.BuildContainer(name, port)
+	createResponse, err := dock.BuildContainer(piName(name), piName(name), name, port)
 	if err != nil {
 		return Application{}, err
 	}
 	app.ContainerID = createResponse.ID
 	// Start the container
-	if err = dock.StartContainer(name); err != nil {
+	if err = dock.StartContainer(piName(name)); err != nil {
 		return Application{}, err
 	}
 	app.Running = true
@@ -226,7 +228,7 @@ func StopApplication(name string) (Application, error) {
 	if err != nil {
 		return Application{}, err
 	}
-	if err := dock.StopContainer(name); err != nil {
+	if err := dock.StopContainer(piName(name)); err != nil {
 		return Application{}, err
 	}
 	app.Running = false
@@ -249,7 +251,7 @@ func StartApplication(name string) (Application, error) {
 	if err != nil {
 		return Application{}, err
 	}
-	if err = dock.StartContainer(name); err != nil {
+	if err = dock.StartContainer(piName(name)); err != nil {
 		return Application{}, err
 	}
 	app.Running = true
