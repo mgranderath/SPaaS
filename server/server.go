@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
+	"github.com/magrandera/PiaaS/server/config"
 	"github.com/magrandera/PiaaS/server/docker"
 
 	"github.com/magrandera/PiaaS/server/models"
@@ -18,6 +20,14 @@ import (
 )
 
 func initServer() error {
+	configPath := filepath.Join(models.GetHomeFolder(), ".config/piaas/config")
+	config, err := config.ReadConfig(configPath)
+	if err != nil {
+		return err
+	}
+	if !config.Nginx {
+		return nil
+	}
 	dock, err := docker.New()
 	if err != nil {
 		return err

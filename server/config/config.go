@@ -8,7 +8,7 @@ import (
 
 //Configuration Stores the main configuration for the application
 type Configuration struct {
-	ServerPort string
+	Nginx bool `json:"nginx"`
 }
 
 var err error
@@ -25,7 +25,7 @@ func ReadConfig(fileName string) (Configuration, error) {
 	//log.Print(configFile)
 	err = json.Unmarshal(configFile, &config)
 	if err != nil {
-		log.Print("Invalid JSON, expecting port from command line flag")
+		log.Print("Invalid JSON")
 		return Configuration{}, err
 	}
 	return config, nil
