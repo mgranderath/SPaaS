@@ -126,6 +126,10 @@ func main() {
 				defer resp.Body.Close()
 				app := models.Application{}
 				bodyBytes, _ := ioutil.ReadAll(resp.Body)
+				if resp.StatusCode == http.StatusConflict {
+					models.PrintErr(os.Stdout, "Application already exists!")
+					return nil
+				}
 				json.Unmarshal(bodyBytes, &app)
 				models.PrintInfo(os.Stdout, "Repository path: "+app.Repository)
 				models.PrintSuccess(os.Stdout, "Creating "+c.Args().First())
@@ -154,6 +158,10 @@ func main() {
 					return nil
 				}
 				defer resp.Body.Close()
+				if resp.StatusCode == http.StatusNotFound {
+					models.PrintErr(os.Stdout, "Application does not exist!")
+					return nil
+				}
 				models.PrintSuccess(os.Stdout, "Deleting "+c.Args().First())
 				return nil
 			},
@@ -180,6 +188,15 @@ func main() {
 					return nil
 				}
 				defer resp.Body.Close()
+				app := models.Application{}
+				bodyBytes, _ := ioutil.ReadAll(resp.Body)
+				if resp.StatusCode == http.StatusNotFound {
+					models.PrintErr(os.Stdout, "Application does not exist!")
+					return nil
+				}
+				fmt.Println(resp.StatusCode, string(bodyBytes))
+				json.Unmarshal(bodyBytes, &app)
+				models.PrintInfo(os.Stdout, "Port: "+app.Port)
 				models.PrintSuccess(os.Stdout, "Deploying Application")
 				return nil
 			},
@@ -206,6 +223,10 @@ func main() {
 					return nil
 				}
 				defer resp.Body.Close()
+				if resp.StatusCode == http.StatusNotFound {
+					models.PrintErr(os.Stdout, "Application does not exist!")
+					return nil
+				}
 				models.PrintSuccess(os.Stdout, "Starting Application")
 				return nil
 			},
@@ -232,6 +253,10 @@ func main() {
 					return nil
 				}
 				defer resp.Body.Close()
+				if resp.StatusCode == http.StatusNotFound {
+					models.PrintErr(os.Stdout, "Application does not exist!")
+					return nil
+				}
 				models.PrintSuccess(os.Stdout, "Stopping Application")
 				return nil
 			},

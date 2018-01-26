@@ -5,10 +5,13 @@ import (
 	"log"
 	"os"
 	"os/user"
-	"path/filepath"
 
 	color "github.com/logrusorgru/aurora"
 )
+
+func piName(name string) string {
+	return "pi-" + name
+}
 
 func fileExists(filePath string) bool {
 	fi, err := os.Stat(filePath)
@@ -19,6 +22,17 @@ func fileExists(filePath string) bool {
 	return fi.Mode().IsRegular()
 }
 
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
+
 // GetHomeFolder : get filepath to home folder of user
 func GetHomeFolder() string {
 	usr, err := user.Current()
@@ -26,14 +40,6 @@ func GetHomeFolder() string {
 		log.Fatal(err)
 	}
 	return usr.HomeDir
-}
-
-func getExecutablePath() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dir
 }
 
 // PrintErr : prints an error

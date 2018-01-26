@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/magrandera/PiaaS/server/models"
@@ -12,10 +11,9 @@ import (
 
 func createApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	app, err := models.CreateApplication(os.Stdout, params["name"])
+	app, err := models.CreateApplication(params["name"])
 	if err != nil {
-		fmt.Fprint(w, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 	js, err := json.Marshal(app)
@@ -47,7 +45,6 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 func getApplications(w http.ResponseWriter, r *http.Request) {
 	apps, err := models.GetApplications()
 	if err != nil {
-		fmt.Fprint(w, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -62,10 +59,9 @@ func getApplications(w http.ResponseWriter, r *http.Request) {
 
 func deployApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	app, err := models.DeployApplication(os.Stdout, params["name"])
+	app, err := models.DeployApplication(params["name"])
 	if err != nil {
-		models.PrintErr(os.Stdout, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	js, err := json.Marshal(app)
@@ -79,9 +75,9 @@ func deployApplication(w http.ResponseWriter, r *http.Request) {
 
 func startApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	app, err := models.StartApplication(os.Stdout, params["name"])
+	app, err := models.StartApplication(params["name"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	js, err := json.Marshal(app)
@@ -95,9 +91,9 @@ func startApplication(w http.ResponseWriter, r *http.Request) {
 
 func stopApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	app, err := models.StopApplication(os.Stdout, params["name"])
+	app, err := models.StopApplication(params["name"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	js, err := json.Marshal(app)
@@ -111,10 +107,9 @@ func stopApplication(w http.ResponseWriter, r *http.Request) {
 
 func deleteApplication(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	status, err := models.DeleteApplication(os.Stdout, params["name"])
+	status, err := models.DeleteApplication(params["name"])
 	if err != nil {
-		fmt.Fprint(w, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
