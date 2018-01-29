@@ -78,7 +78,7 @@ func initServer() error {
 	return nil
 }
 
-// StartServer : start the PiaaS server
+// StartServer starts the PiaaS server
 func StartServer() {
 	router := mux.NewRouter()
 	routing.SetupRouting(router)

@@ -26,7 +26,7 @@ type Application struct {
 	ContainerID string `json:"containerID"`
 }
 
-// CreateApplication : Creates a new Application
+// CreateApplication creates a new application
 func CreateApplication(name string) (Application, error) {
 	home := GetHomeFolder()
 	basePath := filepath.Join(home, "PiaaS-Data")
@@ -73,7 +73,7 @@ func CreateApplication(name string) (Application, error) {
 	return app, nil
 }
 
-// DeleteApplication : Deletes existing Application
+// DeleteApplication deletes existing application
 func DeleteApplication(name string) (bool, error) {
 	home := GetHomeFolder()
 	basePath := filepath.Join(home, "PiaaS-Data")
@@ -103,7 +103,7 @@ func DeleteApplication(name string) (bool, error) {
 	return true, nil
 }
 
-// DeployApplication : Deploys the application
+// DeployApplication deploys an application
 func DeployApplication(name string) (Application, error) {
 	// Create deploy folder
 	app, err := GetApplication(name)
@@ -215,7 +215,7 @@ func DeployApplication(name string) (Application, error) {
 	return app, nil
 }
 
-// StopApplication : Stops the container of a application
+// StopApplication stops the container of an application
 func StopApplication(name string) (Application, error) {
 	app, err := GetApplication(name)
 	if err != nil {
@@ -238,7 +238,7 @@ func StopApplication(name string) (Application, error) {
 	return app, nil
 }
 
-// StartApplication : starts the application
+// StartApplication starts an application
 func StartApplication(name string) (Application, error) {
 	app, err := GetApplication(name)
 	if err != nil {
@@ -261,7 +261,7 @@ func StartApplication(name string) (Application, error) {
 	return app, nil
 }
 
-// GetApplication : Get specific application
+// GetApplication get specific application
 func GetApplication(name string) (Application, error) {
 	app := Application{}
 	if err := db.Read("app", name, &app); err != nil {
@@ -270,7 +270,7 @@ func GetApplication(name string) (Application, error) {
 	return app, nil
 }
 
-// GetApplications : Get a list of all applications
+// GetApplications get a list of all applications
 func GetApplications() ([]Application, error) {
 	records, err := db.ReadAll("app")
 	if err != nil {

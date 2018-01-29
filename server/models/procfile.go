@@ -9,13 +9,13 @@ import (
 	"regexp"
 )
 
-// ProcfileEntry : Contains the procfile entry
+// ProcfileEntry contains the procfile entry
 type ProcfileEntry struct {
 	Name    string
 	Command string
 }
 
-// ParseProcfile : parse yml files
+// ParseProcfile parses yml files
 func ParseProcfile(path string) (entries []ProcfileEntry) {
 	re, _ := regexp.Compile(`^([\w-]+):\s+(.+)$`)
 

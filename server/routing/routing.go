@@ -5,7 +5,7 @@ import (
 	"github.com/magrandera/PiaaS/server/views"
 )
 
-// SetupRouting : sets up the api urls
+// SetupRouting sets up the api urls
 func SetupRouting(router *mux.Router) {
 	router.HandleFunc("/", views.HomePage)
 
