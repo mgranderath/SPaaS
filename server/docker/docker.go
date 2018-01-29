@@ -11,13 +11,13 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-// Docker : struct that contains the connection information to the docker socket
+// Docker struct that contains the connection information to the docker socket
 type Docker struct {
 	Ctx context.Context
 	Cli *client.Client
 }
 
-// New : creates a new connection to the docker socket
+// New creates a new connection to the docker socket
 func New() (Docker, error) {
 	dock := Docker{}
 	dock.Ctx = context.Background()
@@ -29,7 +29,7 @@ func New() (Docker, error) {
 	return dock, nil
 }
 
-// BuildImage : builds a docker image from a tar file
+// BuildImage builds a docker image from a tar file
 func (dock Docker) BuildImage(tarfile *os.File, name string) (types.ImageBuildResponse, error) {
 	imageBuildResponse, err := dock.Cli.ImageBuild(
 		dock.Ctx,
@@ -45,7 +45,7 @@ func (dock Docker) BuildImage(tarfile *os.File, name string) (types.ImageBuildRe
 	return imageBuildResponse, nil
 }
 
-// RemoveImage : removes a docker image
+// RemoveImage removes a docker image
 func (dock Docker) RemoveImage(name string) error {
 	_, err := dock.Cli.ImageRemove(dock.Ctx, name, types.ImageRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such image") {
@@ -54,7 +54,7 @@ func (dock Docker) RemoveImage(name string) error {
 	return nil
 }
 
-// BuildContainer : builds a docker container
+// BuildContainer builds a docker container
 func (dock Docker) BuildContainer(name string, image string, hostname string, port string) (container.ContainerCreateCreatedBody, error) {
 	response, err := dock.Cli.ContainerCreate(dock.Ctx, &container.Config{
 		Image: name,
@@ -77,7 +77,7 @@ func (dock Docker) BuildContainer(name string, image string, hostname string, po
 	return response, nil
 }
 
-// RemoveContainer : removes a docker container
+// RemoveContainer removes a docker container
 func (dock Docker) RemoveContainer(name string) error {
 	err := dock.Cli.ContainerRemove(dock.Ctx, name, types.ContainerRemoveOptions{Force: true})
 	if err != nil && !strings.Contains(err.Error(), "No such container") {
@@ -86,13 +86,13 @@ func (dock Docker) RemoveContainer(name string) error {
 	return nil
 }
 
-// StartContainer : starts a docker container
+// StartContainer starts a docker container
 func (dock Docker) StartContainer(name string) error {
 	err := dock.Cli.ContainerStart(dock.Ctx, name, types.ContainerStartOptions{})
 	return err
 }
 
-// StopContainer : stops a docker container
+// StopContainer stops a docker container
 func (dock Docker) StopContainer(name string) error {
 	err := dock.Cli.ContainerStop(dock.Ctx, name, nil)
 	if err != nil {
@@ -101,7 +101,7 @@ func (dock Docker) StopContainer(name string) error {
 	return nil
 }
 
-// ListContainers : returns a list of docker containers
+// ListContainers returns a list of docker containers
 func (dock Docker) ListContainers() ([]types.Container, error) {
 	containers, err := dock.Cli.ContainerList(dock.Ctx, types.ContainerListOptions{All: true})
 	if err != nil {

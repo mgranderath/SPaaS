@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-// Dockerfile : stores the template value
+// Dockerfile stores the template value
 type Dockerfile struct {
 	BuildName string
 	Command   []string
@@ -53,7 +53,7 @@ COPY . .
 CMD [{{range $index, $cmd := .Command}}"{{.}}"{{if (ne ($index) ($.Length))}},{{end}}{{end}}]
 `
 
-// CreateDockerfile : create dockerfile
+// CreateDockerfile creates dockerfile
 func CreateDockerfile(dock Dockerfile, app Application) error {
 	t := template.New("Dockerfile template")
 	t, err := t.Parse(dockerfileTemplate)
