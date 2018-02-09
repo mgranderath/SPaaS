@@ -14,3 +14,4 @@ import:
 - package: github.com/nanobox-io/golang-scribble
 - package: gopkg.in/src-d/go-git.v4
 - package: gopkg.in/urfave/cli.v1
+- package: gopkg.in/yaml.v2

@@ -9,7 +9,7 @@ import (
 
 var db *scribble.Driver
 
-// InitDB : Initialize the database connection
+// InitDB initializes the database connection
 func InitDB() {
 	var err error
 	dir := filepath.Join(GetHomeFolder(), "PiaaS-Data")

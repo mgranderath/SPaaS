@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// HomePage : is the / page
+// HomePage is the / page
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Placeholder")
 }
