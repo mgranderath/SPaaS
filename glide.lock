@@ -1,5 +1,5 @@
-hash: 8862e2ce7110345ac0ef218739e4525e552905a6e8422031277fa9d3ec4604da
-updated: 2017-11-25T18:28:21.934020055+01:00
+hash: d2c173f5cfc0ca404253dc15d00819ab0d000fc65b07da1d017385556689d0ad
+updated: 2018-02-09T22:07:24.399361753+01:00
 imports:
 - name: github.com/codegangsta/inject
   version: 33e0aa1cb7c019ccc3fbe049a8262a6403d30504
@@ -158,4 +158,6 @@ imports:
   version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
 - name: gopkg.in/warnings.v0
   version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
+- name: gopkg.in/yaml.v2
+  version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports: []

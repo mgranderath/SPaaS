@@ -29,7 +29,13 @@ A heroku like PaaS for the Raspberry Pi or any linux system.
 
 ## Installation & Usage
 
-Full explanation available [here](doc/GUIDE.md)
+Currently supported languages:
+- Python3
+- NodeJs
+- Ruby
+
+**Server**: [here](doc/GUIDE_Server.md)
+**Client**: [here](doc/GUIDE_Client.md)
 
 ## Built With
 
