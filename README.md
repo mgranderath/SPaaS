@@ -11,11 +11,11 @@ A heroku like PaaS for the Raspberry Pi or any linux system.
 
 + First of all fetch all the packages without installing.
     ```shell
-    go get -d github.com/magrandera/PiaaS-go
+    go get -d github.com/magrandera/PiaaS
     ```
 + `cd` into the project directory
     ```shell
-    cd $GOPATH/src/github.com/magrandera/PiaaS-go
+    cd $GOPATH/src/github.com/magrandera/PiaaS
     ```
 + install dependencies with glide
     ```shell
