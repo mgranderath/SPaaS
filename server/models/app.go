@@ -131,11 +131,11 @@ func DeployApplication(name string) (Application, error) {
 		}
 	}
 	// Detect the language
-	if fileExists(filepath.Join(path, "requirements.txt")) {
+	if FileExists(filepath.Join(path, "requirements.txt")) {
 		app.Type = "python"
-	} else if fileExists(filepath.Join(path, "package.json")) {
+	} else if FileExists(filepath.Join(path, "package.json")) {
 		app.Type = "nodejs"
-	} else if fileExists(filepath.Join(path, "Gemfile")) {
+	} else if FileExists(filepath.Join(path, "Gemfile")) {
 		app.Type = "ruby"
 	} else {
 		return Application{}, errors.New("no type detected")

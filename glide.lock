@@ -1,10 +1,12 @@
-hash: d2c173f5cfc0ca404253dc15d00819ab0d000fc65b07da1d017385556689d0ad
-updated: 2018-02-09T22:07:24.399361753+01:00
+hash: b15224daa4e2c6f044bbadd9735dbbc57aa058292b5c740be05e6132c031c5f5
+updated: 2018-04-25T15:03:58.66046142+02:00
 imports:
 - name: github.com/codegangsta/inject
   version: 33e0aa1cb7c019ccc3fbe049a8262a6403d30504
 - name: github.com/codeskyblue/go-sh
   version: 703901965097a6b3155c0f6f774efb877b483f64
+- name: github.com/dgrijalva/jwt-go
+  version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
 - name: github.com/docker/distribution
   version: bc3c7b0525e59d3ecfab3e1568350895fd4a462f
   subpackages:

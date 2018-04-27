@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
@@ -21,6 +22,15 @@ import (
 
 func initServer() error {
 	configPath := filepath.Join(models.GetHomeFolder(), ".config/piaas/config")
+	if !models.FileExists(configPath) {
+		configFile := config.Configuration{}
+		configFile.Nginx = false
+		configFile.Secret = models.RandString(32)
+		err := config.WriteConfig(configPath, configFile)
+		if err != nil {
+			return err
+		}
+	}
 	config, err := config.ReadConfig(configPath)
 	if err != nil {
 		return err
@@ -78,11 +88,22 @@ func initServer() error {
 	return nil
 }
 
+var mySigningKey = []byte("secret")
+
 // StartServer starts the PiaaS server
 func StartServer() {
 	router := mux.NewRouter()
 	routing.SetupRouting(router)
 	models.InitDB()
+
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["user"] = "magrandera"
+
+	tokenString, _ := token.SignedString(mySigningKey)
+	fmt.Println(tokenString)
+
 	err := initServer()
 	if err != nil {
 		fmt.Println(err)
