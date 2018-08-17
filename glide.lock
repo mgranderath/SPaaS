@@ -1,0 +1,8 @@
+hash: 5cd8e1b821f06e533135623aaff59c96d236f1246b0aa84fd8a8954c24b2aa4a
+updated: 2018-08-17T11:32:31.446663+01:00
+imports:
+- name: github.com/labstack/echo
+  version: 1049c9613cd371b7ea8f219404c9a821734781ed
+- name: github.com/spf13/viper
+  version: 907c19d40d9a6c9bb55f040ff4ae45271a4754b9
+testImports: []
