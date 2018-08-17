@@ -5,7 +5,7 @@ build:
 	go build -o release/SPaaS_server ./server
 
 test:
-	go test ./test -v
+	go test ./... -v
 
 fmt:
 	go fmt ./... -v

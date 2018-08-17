@@ -8,7 +8,7 @@ import (
 
 func TestReadConfig(t *testing.T) {
 
-	v, err := config.ReadConfig(".", "test", map[string]interface{}{
+	v, err := config.ReadConfig("../test", "test", map[string]interface{}{
 		"test": true,
 	})
 	if err != nil {
