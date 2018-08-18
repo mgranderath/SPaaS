@@ -9,3 +9,6 @@ import:
 - package: golang.org/x/crypto
   subpackages:
   - bcrypt
+- package: gopkg.in/src-d/go-git.v4
+- package: gopkg.in/src-d/go-billy.v4
+  version: ^4.2.0

@@ -1,8 +1,17 @@
-hash: 8171ce6f21796c0eb9cf32b1c4da91294f4f8a1b6f37d47baebc8d49b90d9992
-updated: 2018-08-18T12:58:40.739396+01:00
+hash: 48281bc15908f7a4384ec44478b5d3aa74139a7f1ff53c33d3641c340f364728
+updated: 2018-08-18T15:04:50.964017+01:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
+- name: github.com/emirpasic/gods
+  version: bba54c718c4e39e4db35f73e0c660df44a4de4cd
+  subpackages:
+  - containers
+  - lists
+  - lists/arraylist
+  - trees
+  - trees/binaryheap
+  - utils
 - name: github.com/fsnotify/fsnotify
   version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/hashicorp/hcl
@@ -17,6 +26,12 @@ imports:
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/jbenet/go-context
+  version: d14ea06fba99483203c19d92cfcd13ebe73135f4
+  subpackages:
+  - io
+- name: github.com/kevinburke/ssh_config
+  version: 82cf3f92643814c75904bc4b01dd5721afa7bb89
 - name: github.com/labstack/echo
   version: 1049c9613cd371b7ea8f219404c9a821734781ed
   subpackages:
@@ -34,10 +49,18 @@ imports:
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
   version: 6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
   version: f15292f7a699fcc1a38a80977f80a046874ba8ac
+- name: github.com/pelletier/go-buffruneio
+  version: e2f66f8164ca709d4c21e815860afd2024e9b894
 - name: github.com/pelletier/go-toml
   version: c2dbbc24a97911339e01bda0b8cabdbd8f13b602
+- name: github.com/sergi/go-diff
+  version: 1744e2970ca51c86172c8190fadad617561ed6e7
+  subpackages:
+  - diffmatchpatch
 - name: github.com/spf13/afero
   version: 787d034dfe70e44075ccc060d346146ef53270ad
   subpackages:
@@ -50,25 +73,103 @@ imports:
   version: 9a97c102cda95a86cec2345a6f09f55a939babf5
 - name: github.com/spf13/viper
   version: 907c19d40d9a6c9bb55f040ff4ae45271a4754b9
+- name: github.com/src-d/gcfg
+  version: f187355171c936ac84a82793659ebb4936bc1c23
+  subpackages:
+  - scanner
+  - token
+  - types
 - name: github.com/valyala/bytebufferpool
   version: e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7
 - name: github.com/valyala/fasttemplate
   version: dcecefd839c4193db0d35b88ec65b4c12d360ab0
+- name: github.com/xanzy/ssh-agent
+  version: ba9c9e33906f58169366275e3450db66139a31a9
 - name: golang.org/x/crypto
   version: b080dc9a8c480b08e698fb1219160d598526310f
   subpackages:
   - acme
   - acme/autocert
   - bcrypt
+  - blowfish
+  - cast5
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - openpgp
+  - openpgp/armor
+  - openpgp/elgamal
+  - openpgp/errors
+  - openpgp/packet
+  - openpgp/s2k
+  - ssh
+  - ssh/agent
+  - ssh/knownhosts
+- name: golang.org/x/net
+  version: c7086645de248775cbf2373cf5ca4d2fa664b8c1
+  subpackages:
+  - context
 - name: golang.org/x/sys
   version: 4ff8c001ce4cc464e644b922325097228fce14d8
   subpackages:
   - unix
+  - windows
 - name: golang.org/x/text
   version: 88f656faf3f37f690df1a32515b479415e1a6769
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/src-d/go-billy.v4
+  version: 83cf655d40b15b427014d7875d10850f96edba14
+  subpackages:
+  - helper/chroot
+  - helper/polyfill
+  - osfs
+  - util
+- name: gopkg.in/src-d/go-git.v4
+  version: 7b6c1266556f59ac436fada3fa6106d4a84f9b56
+  subpackages:
+  - config
+  - internal/revision
+  - plumbing
+  - plumbing/cache
+  - plumbing/filemode
+  - plumbing/format/config
+  - plumbing/format/diff
+  - plumbing/format/gitignore
+  - plumbing/format/idxfile
+  - plumbing/format/index
+  - plumbing/format/objfile
+  - plumbing/format/packfile
+  - plumbing/format/pktline
+  - plumbing/object
+  - plumbing/protocol/packp
+  - plumbing/protocol/packp/capability
+  - plumbing/protocol/packp/sideband
+  - plumbing/revlist
+  - plumbing/storer
+  - plumbing/transport
+  - plumbing/transport/client
+  - plumbing/transport/file
+  - plumbing/transport/git
+  - plumbing/transport/http
+  - plumbing/transport/internal/common
+  - plumbing/transport/server
+  - plumbing/transport/ssh
+  - storage
+  - storage/filesystem
+  - storage/filesystem/dotgit
+  - storage/memory
+  - utils/binary
+  - utils/diff
+  - utils/ioutil
+  - utils/merkletrie
+  - utils/merkletrie/filesystem
+  - utils/merkletrie/index
+  - utils/merkletrie/internal/frame
+  - utils/merkletrie/noder
+- name: gopkg.in/warnings.v0
+  version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
 - name: gopkg.in/yaml.v2
   version: d670f9405373e636a5a2765eea47fac0c9bc91a4
 testImports: []

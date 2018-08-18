@@ -1,9 +1,12 @@
 package common
 
 import (
+	"encoding/json"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/labstack/echo"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -35,4 +38,21 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+// Exists checks whether a file/directory exists
+func Exists(filepath string) bool {
+	if _, err := os.Stat(filepath); err == nil {
+		return true
+	}
+	return false
+}
+
+// EncodeJSONAndFlush encodes a struct to json and sends it
+func EncodeJSONAndFlush(c echo.Context, response interface{}) error {
+	if err := json.NewEncoder(c.Response()).Encode(response); err != nil {
+		return err
+	}
+	c.Response().Flush()
+	return nil
 }

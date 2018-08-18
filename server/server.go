@@ -9,13 +9,17 @@ import (
 	"github.com/magrandera/SPaaS/server/routing"
 )
 
-func main() {
-	e := echo.New()
+func initialize(e *echo.Echo) {
 	config.New(common.HomeDir(), ".spaas.json")
 	if err := config.Save(); err != nil {
 		fmt.Println(err.Error())
 	}
 	routing.GlobalMiddleware(e)
 	routing.SetupRoutes(e)
+}
+
+func main() {
+	e := echo.New()
+	initialize(e)
 	e.Logger.Fatal(e.Start(":1323"))
 }
