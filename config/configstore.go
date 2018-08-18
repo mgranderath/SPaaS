@@ -1,8 +1,10 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"os"
 
+	"github.com/magrandera/SPaaS/common"
 	"github.com/spf13/viper"
 )
 
@@ -22,18 +24,23 @@ func New(FilePath string, FileName string) {
 		FilePath: FilePath,
 		FileName: FileName,
 	}
-	config, err := ReadConfig(FilePath, FileName, map[string]interface{}{
-		"secret": RandStringBytes(15),
+	os.OpenFile(FilePath+"/"+FileName, os.O_RDONLY|os.O_CREATE, 0666)
+	defaultPassword, _ := common.HashPassword("smallpaas")
+	config, err := ReadConfig(FilePath+"/"+FileName, map[string]interface{}{
+		"secret":   common.RandStringBytes(15),
+		"username": "spaas",
+		"password": defaultPassword,
 	})
 	if err != nil {
-		log.Panic("Error reading configuration file at " + FilePath + "/" + FileName)
+		fmt.Println(err.Error())
 	}
 	Cfg.Config = config
 }
 
 // Save saves the configuration file
-func Save() {
-	if err := Cfg.Config.WriteConfig(); err != nil {
-		log.Panic("Error writing configuration file at " + Cfg.FilePath + "/" + Cfg.FileName)
+func Save() error {
+	if err := Cfg.Config.WriteConfigAs(Cfg.FilePath + "/" + Cfg.FileName); err != nil {
+		return err
 	}
+	return nil
 }
