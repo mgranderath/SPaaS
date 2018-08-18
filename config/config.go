@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 // ReadConfig reads a config file `filename` from `filePath` and uses the `defaults`
 func ReadConfig(filePath string, filename string, defaults map[string]interface{}) (*viper.Viper, error) {
