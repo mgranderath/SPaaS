@@ -14,5 +14,7 @@ func SetupRoutes(e *echo.Echo) {
 
 	r := e.Group("/api/app")
 	r.Use(middleware.JWT([]byte(config.Cfg.Config.GetString("secret"))))
+	r.GET("", controller.GetApplications)
 	r.POST("/:name", controller.CreateApplication)
+	r.DELETE("/:name", controller.DeleteApplication)
 }
