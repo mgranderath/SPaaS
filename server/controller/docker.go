@@ -15,7 +15,8 @@ type Docker struct {
 
 var dock Docker
 
-func init() {
+// InitDocker initializes the docker instance
+func InitDocker() {
 	dock = Docker{}
 	dock.Ctx = context.Background()
 	Cli, err := client.NewClientFromEnv()
@@ -23,4 +24,32 @@ func init() {
 		log.Panic("Could not connect to Docker")
 	}
 	dock.Cli = Cli
+}
+
+// ListContainers retrieves a list of all containers running on the system
+func ListContainers() ([]client.APIContainers, error) {
+	list, err := dock.Cli.ListContainers(client.ListContainersOptions{
+		All: true,
+	})
+	return list, err
+}
+
+// PullImage pulls an image from the docker registry
+func PullImage(name string, tag string) error {
+	err := dock.Cli.PullImage(client.PullImageOptions{
+		Repository: name,
+		Tag:        tag,
+	}, client.AuthConfiguration{})
+	return err
+}
+
+// CreateContainer creates a container
+func CreateContainer(opts client.CreateContainerOptions) (*client.Container, error) {
+	return dock.Cli.CreateContainer(opts)
+}
+
+// StartContainer starts the container with id
+func StartContainer(id string) error {
+	err := dock.Cli.StartContainer(id, &client.HostConfig{})
+	return err
 }

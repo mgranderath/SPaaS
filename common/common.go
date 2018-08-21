@@ -56,3 +56,8 @@ func EncodeJSONAndFlush(c echo.Context, response interface{}) error {
 	c.Response().Flush()
 	return nil
 }
+
+// SpaasName returns name with a prefix such as to more easily define spaas only containers
+func SpaasName(name string) string {
+	return "spaas-" + name
+}

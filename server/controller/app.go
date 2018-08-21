@@ -156,6 +156,54 @@ func delete(name string, messages chan<- Application) {
 	close(messages)
 }
 
+func deploy(name string, messages chan<- Application) {
+	appPath := filepath.Join(basePath, "applications", name)
+	deployPath := filepath.Join(appPath, "deploy")
+	repoPath := filepath.Join(appPath, "repo")
+	if !common.Exists(appPath) {
+		messages <- Application{
+			Type:    "error",
+			Message: "Does not exist",
+		}
+		close(messages)
+		return
+	}
+	// Creating directory
+	messages <- Application{
+		Type:    "info",
+		Message: "Creating directories",
+	}
+	err := os.MkdirAll(deployPath, os.ModePerm)
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Creating directories",
+	}
+	// Clone repository
+	messages <- Application{
+		Type:    "info",
+		Message: "Cloning repo",
+	}
+	_, err = git.PlainClone(deployPath, false, &git.CloneOptions{
+		URL: repoPath,
+	})
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+}
+
 // CreateApplication creates a new application
 func CreateApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -195,41 +243,16 @@ func DeleteApplication(c echo.Context) error {
 // DeployApplication deploys an application
 func DeployApplication(c echo.Context) error {
 	name := c.Param("name")
-	appPath := filepath.Join(basePath, "applications", name)
-	deployPath := filepath.Join(appPath, "deploy")
-	if !common.Exists(appPath) {
-		return c.JSON(http.StatusConflict, Application{
-			Type:    "error",
-			Message: "Does not exist",
-		})
+	messages := make(chan Application)
+	go deploy(name, messages)
+	for elem := range messages {
+		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
+			return c.JSON(http.StatusInternalServerError, Application{
+				Type:    "error",
+				Message: err.Error(),
+			})
+		}
 	}
-	// Creating directory
-	if err := common.EncodeJSONAndFlush(c, Application{
-		Type:    "info",
-		Message: "Creating directories",
-	}); err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
-			Type:    "error",
-			Message: err.Error(),
-		})
-	}
-	err := os.MkdirAll(deployPath, os.ModePerm)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
-			Type:    "error",
-			Message: err.Error(),
-		})
-	}
-	if err := common.EncodeJSONAndFlush(c, Application{
-		Type:    "success",
-		Message: "Creating directories",
-	}); err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
-			Type:    "error",
-			Message: err.Error(),
-		})
-	}
-	//
 	return nil
 }
 

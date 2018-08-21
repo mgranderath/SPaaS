@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/magrandera/SPaaS/common"
 	"github.com/magrandera/SPaaS/config"
+	"github.com/magrandera/SPaaS/server/controller"
 	"github.com/magrandera/SPaaS/server/routing"
 )
 
@@ -16,6 +17,8 @@ func initialize(e *echo.Echo) {
 	}
 	routing.GlobalMiddleware(e)
 	routing.SetupRoutes(e)
+	controller.InitDocker()
+	routing.InitReverseProxy()
 }
 
 func main() {
