@@ -8,6 +8,7 @@ import (
 	"github.com/magrandera/SPaaS/server/controller"
 )
 
+// InitReverseProxy initializes the reverse proxy
 func InitReverseProxy() {
 	list, err := controller.ListContainers()
 	if err != nil {
@@ -15,29 +16,30 @@ func InitReverseProxy() {
 	}
 	for _, container := range list {
 		for _, element := range container.Names {
-			log.Println(element)
-			if element == "/"+common.SpaasName("nginx-proxy") {
+			if element == "/"+common.SpaasName("traefik") {
 				return
 			}
 		}
 	}
-	log.Println("Nginx Proxy is not installed but installing now")
-	if err := controller.PullImage("jwilder/nginx-proxy", "alpine-0.7.0"); err != nil {
+	log.Println("Traefik is not installed but installing now")
+	if err := controller.PullImage("traefik", "1.7-alpine"); err != nil {
 		log.Fatal(err.Error())
 	}
+	cmd := []string{"--docker", "--docker.watch"}
 	containerID, err := controller.CreateContainer(client.CreateContainerOptions{
-		Name: common.SpaasName("nginx-proxy"),
+		Name: common.SpaasName("traefik"),
 		Config: &client.Config{
-			Image: "jwilder/nginx-proxy:alpine-0.7.0",
+			Image: "traefik:1.7-alpine",
 			ExposedPorts: map[client.Port]struct{}{
 				"80/tcp": struct{}{},
 			},
+			Cmd: cmd,
 		},
 		HostConfig: &client.HostConfig{
-			Binds: []string{"/var/run/docker.sock:/tmp/docker.sock:ro"},
+			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 			PortBindings: map[client.Port][]client.PortBinding{
 				"80/tcp": []client.PortBinding{
-					{HostIP: "0.0.0.0", HostPort: "80"},
+					{HostIP: "0.0.0.0", HostPort: "81"},
 				},
 			},
 		},
@@ -48,5 +50,5 @@ func InitReverseProxy() {
 	if err := controller.StartContainer(containerID.ID); err != nil {
 		log.Fatal(err.Error())
 	}
-	log.Println("Nginx Proxy is now installed")
+	log.Println("Traefik is now installed")
 }
