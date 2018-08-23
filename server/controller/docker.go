@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"log"
+	"os"
 
 	client "github.com/fsouza/go-dockerclient"
 )
@@ -52,4 +54,23 @@ func CreateContainer(opts client.CreateContainerOptions) (*client.Container, err
 func StartContainer(id string) error {
 	err := dock.Cli.StartContainer(id, &client.HostConfig{})
 	return err
+}
+
+// BuildImage builds an image from a tar stream
+func BuildImage(tarfile *os.File, name string) error {
+	return dock.Cli.BuildImage(client.BuildImageOptions{
+		Name:                name,
+		ForceRmTmpContainer: true,
+		InputStream:         tarfile,
+		OutputStream:        bytes.NewBuffer(nil),
+		RmTmpContainer:      true,
+	})
+}
+
+// RemoveContainer removes an container
+func RemoveContainer(name string) error {
+	return dock.Cli.RemoveContainer(client.RemoveContainerOptions{
+		ID:    name,
+		Force: true,
+	})
 }

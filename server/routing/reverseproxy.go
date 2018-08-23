@@ -25,13 +25,14 @@ func InitReverseProxy() {
 	if err := controller.PullImage("traefik", "1.7-alpine"); err != nil {
 		log.Fatal(err.Error())
 	}
-	cmd := []string{"--docker", "--docker.watch"}
+	cmd := []string{"--docker", "--docker.watch", "--defaultEntryPoints=http", "--entryPoints=Name:http Address::80 Compress:off", "--docker.domain=granderath.tech"}
 	containerID, err := controller.CreateContainer(client.CreateContainerOptions{
 		Name: common.SpaasName("traefik"),
 		Config: &client.Config{
 			Image: "traefik:1.7-alpine",
 			ExposedPorts: map[client.Port]struct{}{
-				"80/tcp": struct{}{},
+				"80/tcp":   struct{}{},
+				"8080/tcp": struct{}{},
 			},
 			Cmd: cmd,
 		},
@@ -39,7 +40,10 @@ func InitReverseProxy() {
 			Binds: []string{"/var/run/docker.sock:/var/run/docker.sock"},
 			PortBindings: map[client.Port][]client.PortBinding{
 				"80/tcp": []client.PortBinding{
-					{HostIP: "0.0.0.0", HostPort: "81"},
+					{HostPort: "80"},
+				},
+				"8080/tcp": []client.PortBinding{
+					{HostPort: "8080"},
 				},
 			},
 		},

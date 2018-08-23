@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	client "github.com/fsouza/go-dockerclient"
 	"github.com/labstack/echo"
 	git "gopkg.in/src-d/go-git.v4"
 
@@ -294,6 +295,82 @@ func deploy(name string, messages chan<- Application) {
 	messages <- Application{
 		Type:    "success",
 		Message: "Packaging app",
+	}
+	messages <- Application{
+		Type:    "info",
+		Message: "Building image",
+	}
+	f, err := os.Open(filepath.Join(appPath, "package.tar"))
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	defer f.Close()
+	if err := BuildImage(f, common.SpaasName(name)); err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Building image",
+	}
+	messages <- Application{
+		Type:    "info",
+		Message: "Building container",
+	}
+	_ = RemoveContainer(common.SpaasName(name))
+	labels := map[string]string{
+		"traefik.backend":       common.SpaasName(name),
+		"traefik.frontend.rule": "Host:" + name + ".granderath.tech",
+		"traefik.enable":        "true",
+		"traefik.port":          "80",
+	}
+	_, err = CreateContainer(client.CreateContainerOptions{
+		Name: common.SpaasName(name),
+		Config: &client.Config{
+			Image: common.SpaasName(name) + ":latest",
+			ExposedPorts: map[client.Port]struct{}{
+				"80/tcp": struct{}{},
+			},
+			Labels: labels,
+		},
+		HostConfig: &client.HostConfig{},
+	})
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Building container",
+	}
+	messages <- Application{
+		Type:    "info",
+		Message: "Starting container",
+	}
+	if err := StartContainer(common.SpaasName(name)); err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Starting container",
 	}
 	close(messages)
 }
