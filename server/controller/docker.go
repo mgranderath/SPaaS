@@ -56,6 +56,11 @@ func StartContainer(id string) error {
 	return err
 }
 
+// StopContainer stops the container with id
+func StopContainer(id string) error {
+	return dock.Cli.StopContainer(id, 0)
+}
+
 // BuildImage builds an image from a tar stream
 func BuildImage(tarfile *os.File, name string) error {
 	return dock.Cli.BuildImage(client.BuildImageOptions{
@@ -73,4 +78,9 @@ func RemoveContainer(name string) error {
 		ID:    name,
 		Force: true,
 	})
+}
+
+// RemoveImage removes an image
+func RemoveImage(name string) error {
+	return dock.Cli.RemoveImage(name)
 }

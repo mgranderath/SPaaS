@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +14,8 @@ import (
 
 	"github.com/magrandera/SPaaS/common"
 	"github.com/magrandera/SPaaS/config"
+	"github.com/magrandera/SPaaS/server/auth"
+	"github.com/magrandera/SPaaS/server/hook"
 )
 
 // Application stores information about the application
@@ -103,9 +104,33 @@ func create(name string, messages chan<- Application) {
 		return
 	}
 	defer file.Close()
-	fmt.Fprintf(file, "#!/usr/bin/env bash\necho \"Starting deploy!\"\n"+
-		"curl --request POST 'http://127.0.0.1:5000/api/v1/app/%s/deploy' |"+
-		"python -c 'import json,sys;obj=json.load(sys.stdin);print \"Successfully deployed!\";print \"Port: \"+obj[\"port\"]'\n", name)
+	token, err := auth.GetToken()
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	postReceive, err := hook.CreatePostReceive(name, token)
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	_, err = file.WriteString(postReceive)
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
 	// Make the hook executable
 	err = os.Chmod(filepath.Join(repoPath, "hooks", "post-receive"), 0755)
 	if err != nil {
@@ -156,6 +181,24 @@ func delete(name string, messages chan<- Application) {
 	messages <- Application{
 		Type:    "success",
 		Message: "Removing directories",
+	}
+	messages <- Application{
+		Type:    "info",
+		Message: "Removing docker container",
+	}
+	_ = RemoveContainer(common.SpaasName(name))
+	messages <- Application{
+		Type:    "success",
+		Message: "Removing docker container",
+	}
+	messages <- Application{
+		Type:    "info",
+		Message: "Removing docker image",
+	}
+	_ = RemoveImage(common.SpaasName(name))
+	messages <- Application{
+		Type:    "success",
+		Message: "Removing docker image",
 	}
 	close(messages)
 }
@@ -213,6 +256,10 @@ func deploy(name string, messages chan<- Application) {
 		}
 		close(messages)
 		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Cloning repo",
 	}
 	messages <- Application{
 		Type:    "info",

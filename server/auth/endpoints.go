@@ -11,6 +11,7 @@ import (
 	"github.com/magrandera/SPaaS/config"
 )
 
+// Login is the endpoint for login
 func Login(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
@@ -36,4 +37,21 @@ func Login(c echo.Context) error {
 	}
 
 	return echo.ErrUnauthorized
+}
+
+// GetToken generates a token for internal request use
+func GetToken() (string, error) {
+	// Create token
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+	claims["username"] = "spaas"
+	claims["admin"] = true
+	claims["exp"] = time.Now().Add(time.Hour * 24 * 365).Unix()
+	// Generate encoded token and send it as response.
+	t, err := token.SignedString([]byte(config.Cfg.Config.GetString("secret")))
+	if err != nil {
+		return "", err
+	}
+	return t, nil
 }

@@ -3,6 +3,7 @@ Applications
 bin
 release
 vendor
+TODO
 
 *.exe
 *.dll

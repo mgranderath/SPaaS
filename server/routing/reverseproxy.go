@@ -1,7 +1,6 @@
 package routing
 
 import (
-	"fmt"
 	"log"
 
 	client "github.com/fsouza/go-dockerclient"
@@ -48,7 +47,6 @@ func InitReverseProxy() {
 		"--defaultEntryPoints=https,http",
 	}
 	if config.Cfg.Config.GetBool("letsencrypt") {
-		fmt.Println("letsencrypt")
 		cmd = append(cmd, letsencrypt...)
 	}
 	containerID, err := controller.CreateContainer(client.CreateContainerOptions{
