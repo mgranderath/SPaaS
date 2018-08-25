@@ -15,7 +15,6 @@ import (
 func Login(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
-
 	if username == config.Cfg.Config.GetString("username") && common.CheckPasswordHash(password, config.Cfg.Config.GetString("password")) {
 		// Create token
 		token := jwt.New(jwt.SigningMethodHS256)

@@ -15,3 +15,7 @@ import:
 - package: github.com/fsouza/go-dockerclient
   version: ^1.2.2
 - package: github.com/Nvveen/Gotty
+- package: github.com/spf13/cobra
+  version: ^0.0.3
+  subpackages:
+  - cobra
