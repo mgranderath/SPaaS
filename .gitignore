@@ -1,8 +1,9 @@
 .vscode
 Applications
 bin
-build
+release
 vendor
+TODO
 
 *.exe
 *.dll
