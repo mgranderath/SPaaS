@@ -17,5 +17,7 @@ func SetupRoutes(e *echo.Echo) {
 	r.GET("", controller.GetApplications)
 	r.POST("/:name", controller.CreateApplication)
 	r.DELETE("/:name", controller.DeleteApplication)
+	r.POST("/:name/start", controller.StartApplication)
+	r.POST("/:name/stop", controller.StopApplication)
 	r.POST("/:name/deploy", controller.DeployApplication)
 }

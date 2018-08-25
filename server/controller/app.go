@@ -422,6 +422,44 @@ func deploy(name string, messages chan<- Application) {
 	close(messages)
 }
 
+func start(name string, messages chan<- Application) {
+	messages <- Application{
+		Type:    "info",
+		Message: "Starting application",
+	}
+	if err := StartContainer(common.SpaasName(name)); err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Starting application",
+	}
+}
+
+func stop(name string, messages chan<- Application) {
+	messages <- Application{
+		Type:    "info",
+		Message: "Starting application",
+	}
+	if err := StopContainer(common.SpaasName(name)); err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Starting application",
+	}
+}
+
 // CreateApplication creates a new application
 func CreateApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -460,6 +498,8 @@ func DeleteApplication(c echo.Context) error {
 
 // DeployApplication deploys an application
 func DeployApplication(c echo.Context) error {
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
 	messages := make(chan Application)
 	go deploy(name, messages)
@@ -491,6 +531,42 @@ func GetApplications(c echo.Context) error {
 			Type:    "info",
 			Message: f.Name(),
 		}); err != nil {
+			return c.JSON(http.StatusInternalServerError, Application{
+				Type:    "error",
+				Message: err.Error(),
+			})
+		}
+	}
+	return nil
+}
+
+// StartApplication starts an application
+func StartApplication(c echo.Context) error {
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().WriteHeader(http.StatusOK)
+	name := c.Param("name")
+	messages := make(chan Application)
+	go start(name, messages)
+	for elem := range messages {
+		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
+			return c.JSON(http.StatusInternalServerError, Application{
+				Type:    "error",
+				Message: err.Error(),
+			})
+		}
+	}
+	return nil
+}
+
+// StopApplication starts an application
+func StopApplication(c echo.Context) error {
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().WriteHeader(http.StatusOK)
+	name := c.Param("name")
+	messages := make(chan Application)
+	go stop(name, messages)
+	for elem := range messages {
+		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			return c.JSON(http.StatusInternalServerError, Application{
 				Type:    "error",
 				Message: err.Error(),
