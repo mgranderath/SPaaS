@@ -22,7 +22,7 @@ import (
 type Application struct {
 	Type     string     `json:"type"`
 	Message  string     `json:"message"`
-	Extended []KeyValue `json:"extended"`
+	Extended []KeyValue `json:"extended,omitempty"`
 }
 
 // KeyValue holds extra information of a message
@@ -288,7 +288,7 @@ func deploy(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Detecting run command",
 		Extended: []KeyValue{
-			{Key: "Cmd", Value: dockerfile.Command},
+			{Key: "Cmd", Value: v.GetString("start")},
 		},
 	}
 	messages <- Application{
@@ -439,12 +439,13 @@ func start(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Starting application",
 	}
+	close(messages)
 }
 
 func stop(name string, messages chan<- Application) {
 	messages <- Application{
 		Type:    "info",
-		Message: "Starting application",
+		Message: "Stopping application",
 	}
 	if err := StopContainer(common.SpaasName(name)); err != nil {
 		messages <- Application{
@@ -456,8 +457,9 @@ func stop(name string, messages chan<- Application) {
 	}
 	messages <- Application{
 		Type:    "success",
-		Message: "Starting application",
+		Message: "Stopping application",
 	}
+	close(messages)
 }
 
 // CreateApplication creates a new application

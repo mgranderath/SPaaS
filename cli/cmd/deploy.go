@@ -11,29 +11,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Application stores information about the application
-type Application struct {
-	Type     string     `json:"type"`
-	Message  string     `json:"message"`
-	Extended []KeyValue `json:"extended,omitempty"`
-}
-
-// KeyValue holds extra information of a message
-type KeyValue struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
-}
-
-// addCmd represents the add command
-var addCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Add a new application to be deployed",
+// deployCmd represents the deploy command
+var deployCmd = &cobra.Command{
+	Use:   "deploy",
+	Short: "Deploy an application",
 	Long:  ``,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString("token")
 		client := &http.Client{}
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0]
+		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0] + "/deploy"
 		req, _ := http.NewRequest("POST", url, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		res, err := client.Do(req)
@@ -68,5 +55,5 @@ var addCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(deployCmd)
 }

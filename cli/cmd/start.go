@@ -1,3 +1,17 @@
+// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cmd
 
 import (
@@ -11,29 +25,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Application stores information about the application
-type Application struct {
-	Type     string     `json:"type"`
-	Message  string     `json:"message"`
-	Extended []KeyValue `json:"extended,omitempty"`
-}
-
-// KeyValue holds extra information of a message
-type KeyValue struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
-}
-
-// addCmd represents the add command
-var addCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Add a new application to be deployed",
+// startCmd represents the start command
+var startCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start a stopped application",
 	Long:  ``,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString("token")
 		client := &http.Client{}
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0]
+		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0] + "/start"
 		req, _ := http.NewRequest("POST", url, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		res, err := client.Do(req)
@@ -68,5 +69,5 @@ var addCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(startCmd)
 }
