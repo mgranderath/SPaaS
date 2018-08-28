@@ -25,6 +25,33 @@ type KeyValue struct {
 
 var basePath = filepath.Join(common.HomeDir(), ".spaas")
 
+// GetApplication returns a current application
+func GetApplication(c echo.Context) error {
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().WriteHeader(http.StatusOK)
+	name := c.Param("name")
+	container, err := InspectContainer(common.SpaasName(name))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Application{
+			Type:    "error",
+			Message: err.Error(),
+		})
+	}
+	if err := common.EncodeJSONAndFlush(c, Application{
+		Type:    "success",
+		Message: "Getting container info",
+		Extended: []KeyValue{
+			{Key: "state", Value: container.State.String()},
+		},
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, Application{
+			Type:    "error",
+			Message: err.Error(),
+		})
+	}
+	return nil
+}
+
 // GetApplications returns a list of all applications
 func GetApplications(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

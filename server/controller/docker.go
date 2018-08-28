@@ -84,3 +84,8 @@ func RemoveContainer(name string) error {
 func RemoveImage(name string) error {
 	return dock.Cli.RemoveImage(name)
 }
+
+// InspectContainer inspects a container
+func InspectContainer(name string) (*client.Container, error) {
+	return dock.Cli.InspectContainer(name)
+}

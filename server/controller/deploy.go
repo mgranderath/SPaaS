@@ -187,7 +187,7 @@ func deploy(name string, messages chan<- Application) {
 	_ = RemoveContainer(common.SpaasName(name))
 	labels := map[string]string{
 		"traefik.backend":       common.SpaasName(name),
-		"traefik.frontend.rule": "Host:" + name + ".granderath.tech",
+		"traefik.frontend.rule": "Host:" + name + "." + config.Cfg.Config.GetString("domain"),
 		"traefik.enable":        "true",
 		"traefik.port":          "80",
 	}

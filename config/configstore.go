@@ -40,6 +40,7 @@ func New(FilePath string, FileName string) {
 		"letesencryptEmail": "example@example.com",
 		"compress":          false,
 		"acmePath":          filepath.Join(common.HomeDir(), ".spaas", "acme"),
+		"domain":            "example.com",
 	})
 	if err != nil {
 		fmt.Println(err.Error())
