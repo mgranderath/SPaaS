@@ -25,6 +25,19 @@ type KeyValue struct {
 
 var basePath = filepath.Join(common.HomeDir(), ".spaas")
 
+// GetLogs streams the log of a container
+func GetLogs(c echo.Context) error {
+	name := c.Param("name")
+	resp, err := ContainerLogs(common.SpaasName(name))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Application{
+			Type:    "error",
+			Message: err.Error(),
+		})
+	}
+	return c.Stream(http.StatusOK, "text/plain", resp)
+}
+
 // GetApplication returns a current application
 func GetApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
