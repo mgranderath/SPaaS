@@ -1,28 +1,17 @@
-SRC = $(find -name "*.go" -not -path "./vendor/*")
+all: test build
 
-all: build
+build:
+	mkdir -p release
+	go build -o release/SPaaS_server ./server
 
-.PHONY: build
-build: 
-	mkdir -p build
-	GOOS=linux GOARCH=arm GOARM=6 go build -o build/PiaaS_ARM ./server
-	go build -o build/PiaaS ./server
-	go build -o build/PiaaS_cli ./cli
+build_linux:
+	mkdir -p release
+	GOOS=linux GOARCH=amd64 go build -o release/SPaaS_server ./server
 
-client:
-	mkdir -p build
-	go build -o build/PiaaS_cli ./cli
+test:
+	go test ./... -v
 
-rest:
-	mkdir -p build
-	go build -o build/PiaaS ./server
+fmt:
+	go fmt ./... -v
 
-arm:
-	mkdir -p build
-	go build -o build/PiaaS_ARM ./server
-
-dependencies:
-	glide install --strip-vendor
-
-clean: 
-	rm -rf build
+.PHONY: build test fmt

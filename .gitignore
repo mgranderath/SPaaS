@@ -1,8 +1,9 @@
 .vscode
 Applications
 bin
-build
+release
 vendor
+TODO
 
 *.exe
 *.dll
@@ -33,3 +34,4 @@ Thumbs.db
 *.swo
 *.lnk
 *~
+*.sqlite

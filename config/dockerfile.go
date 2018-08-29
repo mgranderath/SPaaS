@@ -1,6 +1,4 @@
-// +build linux,arm
-
-package models
+package config
 
 import (
 	"html/template"
@@ -12,15 +10,13 @@ import (
 type Dockerfile struct {
 	BuildName string
 	Command   []string
-	Length    int
 	Port      string
 	Type      string
+	Length    int
 }
 
-const dockerfileTemplate = `FROM arm32v6/alpine:3.5
-
+const dockerfileTemplate = `FROM alpine:3.5
 WORKDIR /usr/src/app
-
 {{if eq .Type "python"}}
 RUN apk add --no-cache python3 && \
     python3 -m ensurepip && \
@@ -45,24 +41,20 @@ COPY Gemfile /usr/src/app/Gemfile
 COPY Gemfile.lock /usr/src/app/Gemfile.lock 
 RUN bundle install
 {{end}}
-
 EXPOSE 5000:5000
-
 COPY . .
-
 CMD [{{range $index, $cmd := .Command}}"{{.}}"{{if (ne ($index) ($.Length))}},{{end}}{{end}}]
 `
 
 // CreateDockerfile creates dockerfile
-func CreateDockerfile(dock Dockerfile, app Application) error {
+func CreateDockerfile(dock Dockerfile, appPath string) error {
 	t := template.New("Dockerfile template")
 	t, err := t.Parse(dockerfileTemplate)
 	if err != nil {
 		return err
 	}
-	dock.Type = app.Type
 	dock.Length = len(dock.Command) - 1
-	f, err := os.Create(filepath.Join(app.Path, "deploy", "Dockerfile"))
+	f, err := os.Create(filepath.Join(appPath, "deploy", "Dockerfile"))
 	if err != nil {
 		return err
 	}
