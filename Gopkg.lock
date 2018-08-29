@@ -2,6 +2,32 @@
 
 
 [[projects]]
+  digest = "1:8c08dabeec001da3389028236a924397b9e11d4c519439d0135db44f9f21cb0f"
+  name = "docker.io/go-docker"
+  packages = [
+    ".",
+    "api",
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/events",
+    "api/types/filters",
+    "api/types/image",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/swarm/runtime",
+    "api/types/time",
+    "api/types/versions",
+    "api/types/volume",
+  ]
+  pruneopts = "UT"
+  revision = "b3f5b5de7bbce0acc6a7fc0a4c2b88db678e262e"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:6da51e5ec493ad2b44cb04129e2d0a068c8fb9bd6cb5739d199573558696bb94"
   name = "github.com/Azure/go-ansiterm"
@@ -44,6 +70,16 @@
   version = "v3.2.0"
 
 [[projects]]
+  digest = "1:4189ee6a3844f555124d9d2656fe7af02fca961c2a9bad9074789df13a0c62e0"
+  name = "github.com/docker/distribution"
+  packages = [
+    "digestset",
+    "reference",
+  ]
+  pruneopts = "UT"
+  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
+
+[[projects]]
   digest = "1:4ec8504b68b75f562efc4b291cba33194f88eaa4e68d9fc449e5b7ca68539329"
   name = "github.com/docker/docker"
   packages = [
@@ -73,11 +109,16 @@
   revision = "3dfb26ab3cbf961298f8ce3f94659b5fe4146ceb"
 
 [[projects]]
-  digest = "1:ade935c55cd6d0367c843b109b09c9d748b1982952031414740750fdf94747eb"
+  digest = "1:b6b5c3e8da0fb8073cd2886ba249a40f4402b4391ca6eba905a142cceea97a12"
   name = "github.com/docker/go-connections"
-  packages = ["nat"]
+  packages = [
+    "nat",
+    "sockets",
+    "tlsconfig",
+  ]
   pruneopts = "UT"
-  revision = "7beb39f0b969b075d1325fecb092faf27fd357b6"
+  revision = "3ede32e2033de7505e6500d6c868c2b9ed9f169d"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:6f82cacd0af5921e99bf3f46748705239b36489464f4529a1589bc895764fb18"
@@ -139,12 +180,12 @@
   version = "v1.2.2"
 
 [[projects]]
-  digest = "1:9a688317f3231e0175b3429033f44411906c0ce119361b7b5019d01375f8cff7"
+  digest = "1:701239373bbf22998c5a36c76d2ff4ee309b3980e39b7a66d72cabd3aab748fa"
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
+  revision = "100ba4e885062801d56799d78530b73b178a78f3"
+  version = "v0.4"
 
 [[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
@@ -308,7 +349,8 @@
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "839d9e913e063e28dfd0e6c7b7512793e0a48be9"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
@@ -446,9 +488,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
+  digest = "1:58cb5fbdf85e1f468c749aa31773ff102866831106f52762b2823ae235ca11e7"
   name = "golang.org/x/net"
-  packages = ["context"]
+  packages = [
+    "context",
+    "context/ctxhttp",
+    "internal/socks",
+    "proxy",
+  ]
   pruneopts = "UT"
   revision = "8a410e7b638dca158bf9e766925842f6651ff828"
 
@@ -561,6 +608,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "docker.io/go-docker",
     "github.com/dgrijalva/jwt-go",
     "github.com/fatih/color",
     "github.com/fsouza/go-dockerclient",

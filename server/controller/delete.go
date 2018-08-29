@@ -49,7 +49,7 @@ func delete(name string, messages chan<- Application) {
 		Type:    "info",
 		Message: "Removing docker image",
 	}
-	_ = RemoveImage(common.SpaasName(name))
+	_, _ = RemoveImage(common.SpaasName(name))
 	messages <- Application{
 		Type:    "success",
 		Message: "Removing docker image",

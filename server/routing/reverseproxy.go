@@ -3,7 +3,9 @@ package routing
 import (
 	"log"
 
-	client "github.com/fsouza/go-dockerclient"
+	"docker.io/go-docker/api/types/container"
+	"docker.io/go-docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 	"github.com/magrandera/SPaaS/common"
 	"github.com/magrandera/SPaaS/config"
 	"github.com/magrandera/SPaaS/server/controller"
@@ -23,7 +25,7 @@ func InitReverseProxy() {
 		}
 	}
 	log.Println("Traefik is not installed but installing now")
-	if err := controller.PullImage("traefik", "1.7-alpine"); err != nil {
+	if err := controller.PullImage("traefik:1.7-alpine"); err != nil {
 		log.Fatal(err.Error())
 	}
 	cmd := []string{
@@ -49,35 +51,36 @@ func InitReverseProxy() {
 	if config.Cfg.Config.GetBool("letsencrypt") {
 		cmd = append(cmd, letsencrypt...)
 	}
-	containerID, err := controller.CreateContainer(client.CreateContainerOptions{
-		Name: common.SpaasName("traefik"),
-		Config: &client.Config{
+	containerID, err := controller.CreateContainer(
+		container.Config{
 			Image: "traefik:1.7-alpine",
-			ExposedPorts: map[client.Port]struct{}{
+			ExposedPorts: nat.PortSet{
 				"80/tcp":   struct{}{},
 				"8080/tcp": struct{}{},
 				"443/tcp":  struct{}{},
 			},
 			Cmd: cmd,
 		},
-		HostConfig: &client.HostConfig{
+		container.HostConfig{
 			Binds: []string{
 				"/var/run/docker.sock:/var/run/docker.sock",
 				config.Cfg.Config.GetString("acmePath") + ":/var/acme",
 			},
-			PortBindings: map[client.Port][]client.PortBinding{
-				"80/tcp": []client.PortBinding{
+			PortBindings: nat.PortMap{
+				"80/tcp": []nat.PortBinding{
 					{HostPort: "80"},
 				},
-				"8080/tcp": []client.PortBinding{
+				"8080/tcp": []nat.PortBinding{
 					{HostPort: "8080"},
 				},
-				"443/tcp": []client.PortBinding{
+				"443/tcp": []nat.PortBinding{
 					{HostPort: "443"},
 				},
 			},
 		},
-	})
+		network.NetworkingConfig{},
+		common.SpaasName("traefik"),
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

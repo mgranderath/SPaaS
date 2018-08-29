@@ -68,3 +68,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "docker.io/go-docker"
+  version = "1.0.0"

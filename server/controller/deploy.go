@@ -1,13 +1,16 @@
 package controller
 
 import (
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	client "github.com/fsouza/go-dockerclient"
+	"docker.io/go-docker/api/types/container"
+	"docker.io/go-docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 	"github.com/labstack/echo"
 	"github.com/magrandera/SPaaS/common"
 	"github.com/magrandera/SPaaS/config"
@@ -168,7 +171,8 @@ func deploy(name string, messages chan<- Application) {
 		return
 	}
 	defer f.Close()
-	if err := BuildImage(f, common.SpaasName(name)); err != nil {
+	response, err := BuildImage(f, common.SpaasName(name))
+	if err != nil {
 		messages <- Application{
 			Type:    "error",
 			Message: err.Error(),
@@ -176,6 +180,8 @@ func deploy(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
+	defer response.Body.Close()
+	_, err = ioutil.ReadAll(response.Body)
 	messages <- Application{
 		Type:    "success",
 		Message: "Building image",
@@ -191,17 +197,14 @@ func deploy(name string, messages chan<- Application) {
 		"traefik.enable":        "true",
 		"traefik.port":          "80",
 	}
-	_, err = CreateContainer(client.CreateContainerOptions{
-		Name: common.SpaasName(name),
-		Config: &client.Config{
+	_, err = CreateContainer(
+		container.Config{
 			Image: common.SpaasName(name) + ":latest",
-			ExposedPorts: map[client.Port]struct{}{
+			ExposedPorts: nat.PortSet{
 				"80/tcp": struct{}{},
 			},
 			Labels: labels,
-		},
-		HostConfig: &client.HostConfig{},
-	})
+		}, container.HostConfig{}, network.NetworkingConfig{}, common.SpaasName(name))
 	if err != nil {
 		messages <- Application{
 			Type:    "error",

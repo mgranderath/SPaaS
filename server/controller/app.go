@@ -41,7 +41,7 @@ func GetApplication(c echo.Context) error {
 		Type:    "success",
 		Message: "Getting container info",
 		Extended: []KeyValue{
-			{Key: "state", Value: container.State.String()},
+			{Key: "state", Value: container.State.Status},
 		},
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, Application{
