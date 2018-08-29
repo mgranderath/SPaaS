@@ -37,13 +37,7 @@ func GetApplication(c echo.Context) error {
 			Message: err.Error(),
 		})
 	}
-	if err := common.EncodeJSONAndFlush(c, Application{
-		Type:    "success",
-		Message: "Getting container info",
-		Extended: []KeyValue{
-			{Key: "state", Value: container.State.Status},
-		},
-	}); err != nil {
+	if err := common.EncodeJSONAndFlush(c, container); err != nil {
 		return c.JSON(http.StatusInternalServerError, Application{
 			Type:    "error",
 			Message: err.Error(),

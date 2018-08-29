@@ -1,6 +1,6 @@
 package main
 
-import "github.com/magrandera/SpaaS/cli/cmd"
+import "github.com/magrandera/SPaaS/cli/cmd"
 
 func main() {
 	cmd.Execute()
