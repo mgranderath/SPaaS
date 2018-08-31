@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/magrandera/SPaaS/common"
+	"github.com/magrandera/SPaaS/config"
 	"github.com/magrandera/SPaaS/server/auth"
 	"github.com/magrandera/SPaaS/server/hook"
 	git "gopkg.in/src-d/go-git.v4"
@@ -92,7 +93,11 @@ func create(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
-	postReceive, err := hook.CreatePostReceive(name, token)
+	prefix := "http://"
+	if config.Cfg.Config.GetBool("letsencrypt") {
+		prefix = "https://"
+	}
+	postReceive, err := hook.CreatePostReceive(name, token, "spaas."+config.Cfg.Config.GetString("domain"), prefix)
 	if err != nil {
 		messages <- Application{
 			Type:    "error",

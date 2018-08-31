@@ -1,4 +1,4 @@
-all: test build
+all: build
 
 build:
 	mkdir -p release

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/labstack/echo"
 	"github.com/magrandera/SPaaS/common"
@@ -11,7 +12,7 @@ import (
 )
 
 func initialize(e *echo.Echo) {
-	config.New(common.HomeDir(), ".spaas.json")
+	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
 	if err := config.Save(); err != nil {
 		fmt.Println(err.Error())
 	}

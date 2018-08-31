@@ -22,14 +22,6 @@ var setupCmd = &cobra.Command{
 		text, _ := reader.ReadString('\n')
 		text = strings.TrimSuffix(text, "\n")
 		viper.Set("url", text)
-		fmt.Println("Enter Port of Server (leave blank for default):")
-		text, _ = reader.ReadString('\n')
-		text = strings.TrimSuffix(text, "\n")
-		if text == "" {
-			viper.Set("port", "1323")
-		} else {
-			viper.Set("port", text)
-		}
 		viper.WriteConfig()
 	},
 }

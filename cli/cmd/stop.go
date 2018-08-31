@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+var tr = &http.Transport{
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
 // stopCmd represents the stop command
 var stopCmd = &cobra.Command{
 	Use:   "stop",
@@ -19,8 +24,8 @@ var stopCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString("token")
-		client := &http.Client{}
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0] + "/stop"
+		client := &http.Client{Transport: tr}
+		url := viper.GetString("url") + "/api/app/" + args[0] + "/stop"
 		req, _ := http.NewRequest("POST", url, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		res, err := client.Do(req)

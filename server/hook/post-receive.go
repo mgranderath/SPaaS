@@ -6,8 +6,10 @@ import (
 )
 
 type templateData struct {
-	Name  string
-	Token string
+	Name           string
+	Token          string
+	CustomEndpoint string
+	HTTPS          string
 }
 
 const postReceiveHook = `#!/usr/bin/env python
@@ -16,7 +18,7 @@ const postReceiveHook = `#!/usr/bin/env python
 import json
 import urllib2
 import urllib
-import socket
+import socket, ssl
 socket._fileobject.default_bufsize = 0
 
 INFO_START = "\33[33m"
@@ -24,12 +26,12 @@ SUCCESS_START = "\33[32m"
 ERROR_START = "\33[91m"
 END = "\033[0m"
 
-url = 'http://localhost:1323/api/app/{{ .Name }}/deploy'
+url = '{{ .HTTPS }}{{ .CustomEndpoint }}:80/api/app/{{ .Name }}/deploy'
 headers = {'Authorization': 'Bearer {{ .Token }}'}
 values = {}
 data = urllib.urlencode(values)
 req = urllib2.Request(url, data, headers=headers)
-response = urllib2.urlopen(req)
+response = urllib2.urlopen(req, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
 for line in response:
     if line == '\n':
         pass
@@ -48,7 +50,7 @@ for line in response:
 `
 
 // CreatePostReceive returns the code for the post-receive hook
-func CreatePostReceive(name string, token string) (string, error) {
+func CreatePostReceive(name string, token string, endpoint string, HTTPS string) (string, error) {
 	t := template.New("Post Receive Hook")
 	t, err := t.Parse(postReceiveHook)
 	if err != nil {
@@ -57,6 +59,8 @@ func CreatePostReceive(name string, token string) (string, error) {
 	data := templateData{}
 	data.Name = name
 	data.Token = token
+	data.CustomEndpoint = endpoint
+	data.HTTPS = HTTPS
 	var tpl bytes.Buffer
 	err = t.Execute(&tpl, data)
 	if err != nil {

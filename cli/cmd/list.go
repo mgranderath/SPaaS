@@ -18,8 +18,8 @@ var listCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString("token")
-		client := &http.Client{}
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app"
+		client := &http.Client{Transport: tr}
+		url := viper.GetString("url") + "/api/app"
 		req, _ := http.NewRequest("GET", url, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		res, err := client.Do(req)
