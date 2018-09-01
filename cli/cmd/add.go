@@ -32,8 +32,8 @@ var addCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString("token")
-		client := &http.Client{}
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/api/app/" + args[0]
+		client := &http.Client{Transport: tr}
+		url := viper.GetString("url") + "/api/app/" + args[0]
 		req, _ := http.NewRequest("POST", url, nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		res, err := client.Do(req)

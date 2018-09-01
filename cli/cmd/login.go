@@ -34,14 +34,14 @@ var loginCmd = &cobra.Command{
 		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
 		password := string(bytePassword)
 		fmt.Println()
-		if !viper.InConfig("url") || !viper.InConfig("port") {
+		if !viper.InConfig("url") {
 			fmt.Println("URL and Port not set in config. Run \"paas setup\"")
 			return
 		}
 		v := url.Values{}
 		v.Add("username", username)
 		v.Add("password", password)
-		url := "http://" + viper.GetString("url") + ":" + viper.GetString("port") + "/login"
+		url := viper.GetString("url") + "/login"
 		resp, err := http.PostForm(url, v)
 		if err != nil {
 			fmt.Println(err.Error())

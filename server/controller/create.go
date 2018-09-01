@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/magrandera/SPaaS/common"
+	"github.com/magrandera/SPaaS/config"
 	"github.com/magrandera/SPaaS/server/auth"
 	"github.com/magrandera/SPaaS/server/hook"
 	git "gopkg.in/src-d/go-git.v4"
@@ -15,6 +16,7 @@ import (
 func create(name string, messages chan<- Application) {
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
+	externalRepoPath := filepath.Join(config.Cfg.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
 	// Check if app already exists
 	if common.Exists(appPath) {
 		messages <- Application{
@@ -92,7 +94,11 @@ func create(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
-	postReceive, err := hook.CreatePostReceive(name, token)
+	prefix := "http://"
+	if config.Cfg.Config.GetBool("letsencrypt") {
+		prefix = "https://"
+	}
+	postReceive, err := hook.CreatePostReceive(name, token, "spaas."+config.Cfg.Config.GetString("domain"), prefix)
 	if err != nil {
 		messages <- Application{
 			Type:    "error",
@@ -128,7 +134,7 @@ func create(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Creating app",
 		Extended: []KeyValue{
-			{Key: "RepoPath", Value: repoPath},
+			{Key: "RepoPath", Value: externalRepoPath},
 		},
 	}
 	close(messages)

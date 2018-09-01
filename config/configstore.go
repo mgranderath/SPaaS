@@ -39,12 +39,13 @@ func New(FilePath string, FileName string) {
 		"letsencrypt":       false,
 		"letesencryptEmail": "example@example.com",
 		"compress":          false,
-		"acmePath":          filepath.Join(common.HomeDir(), ".spaas", "acme"),
+		"acmePath":          filepath.Join(common.HomeDir(), ".spaas-server", "acme"),
 		"domain":            "example.com",
 	})
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	config.AutomaticEnv()
 	Cfg.Config = config
 }
 
