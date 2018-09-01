@@ -1,60 +1,13 @@
-# PiaaS [WIP]
+# SPaaS (Small Product as a Service) [WIP]
 
-A heroku like PaaS for the Raspberry Pi or any linux system.
+A lightweight Heroku like PaaS.
 
-## Status
-- [ ] Basic web interface
-- [ ] Container tracking
-- [x] Basic deployment functionality
+# How to deploy
 
-## Building
-
-+ First of all fetch all the packages without installing.
-    ```shell
-    go get -d github.com/magrandera/PiaaS-go
-    ```
-+ `cd` into the project directory
-    ```shell
-    cd $GOPATH/src/github.com/magrandera/PiaaS-go
-    ```
-+ install dependencies with glide
-    ```shell
-    glide install --strip-vendor
-    ```
-+ build the binaries using the makefile
-    ```shell
-    make
-    ```
-+ binaries will be in /build folder
-
-## Installation & Usage
-
-Currently supported languages:
-- Python3
-- NodeJs
-- Ruby
-
-**Server**: [here](doc/GUIDE_Server.md)
-**Client**: [here](doc/GUIDE_Client.md)
-
-## Built With
-
-* [Glide](https://github.com/Masterminds/glide) - Dependency Management
-* [cli](https://github.com/urfave/cli) - CLI framework
-* [moby](https://github.com/moby/moby) - Docker repository
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Authors
-
-* **Malte Granderath** - *Initial work* - [magrandera](https://github.com/magrandera)
-
-See also the list of [contributors](https://github.com/magrandera/PiaaS-go/graphs/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the Apache2.0 License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
+```
+docker run -d \ 
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ~/.spaas-server:/root/.spaas \
+    --label traefik.frontend.rule=Host:spaas.<your-domain>.<your-domain-extension> \
+    --name spaas mgranderath/spaas
+```
