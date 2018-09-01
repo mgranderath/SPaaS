@@ -26,7 +26,7 @@ SUCCESS_START = "\33[32m"
 ERROR_START = "\33[91m"
 END = "\033[0m"
 
-url = '{{ .HTTPS }}{{ .CustomEndpoint }}:80/api/app/{{ .Name }}/deploy'
+url = '{{ .HTTPS }}{{ .CustomEndpoint }}/api/app/{{ .Name }}/deploy'
 headers = {'Authorization': 'Bearer {{ .Token }}'}
 values = {}
 data = urllib.urlencode(values)
