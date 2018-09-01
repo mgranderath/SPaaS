@@ -31,7 +31,7 @@ headers = {'Authorization': 'Bearer {{ .Token }}'}
 values = {}
 data = urllib.urlencode(values)
 req = urllib2.Request(url, data, headers=headers)
-response = urllib2.urlopen(req, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
+response = urllib2.urlopen(req)
 for line in response:
     if line == '\n':
         pass
