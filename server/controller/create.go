@@ -16,6 +16,7 @@ import (
 func create(name string, messages chan<- Application) {
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
+	externalRepoPath := filepath.Join(config.Cfg.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
 	// Check if app already exists
 	if common.Exists(appPath) {
 		messages <- Application{
@@ -133,7 +134,7 @@ func create(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Creating app",
 		Extended: []KeyValue{
-			{Key: "RepoPath", Value: repoPath},
+			{Key: "RepoPath", Value: externalRepoPath},
 		},
 	}
 	close(messages)

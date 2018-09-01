@@ -45,6 +45,7 @@ func New(FilePath string, FileName string) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	config.AutomaticEnv()
 	Cfg.Config = config
 }
 
