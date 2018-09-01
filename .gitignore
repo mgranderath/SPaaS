@@ -4,6 +4,9 @@ bin
 release
 vendor
 TODO
+frontend/node_modules
+frontend/.cache
+frontend/dist
 
 *.exe
 *.dll

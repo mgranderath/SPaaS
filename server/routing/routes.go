@@ -11,6 +11,7 @@ import (
 // SetupRoutes sets up the routes for the app
 func SetupRoutes(e *echo.Echo) {
 	e.POST("/login", auth.Login)
+	e.File("/", "static/index.html")
 
 	r := e.Group("/api/app")
 	r.Use(middleware.JWT([]byte(config.Cfg.Config.GetString("secret"))))
