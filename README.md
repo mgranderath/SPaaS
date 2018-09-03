@@ -7,7 +7,8 @@ A lightweight Heroku like PaaS.
 ```
 docker run -d \ 
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v ~/.spaas-server:/root/.spaas \
+    -v ~/<spaas-directory>:/root/.spaas \
+    -e HOST_CONFIG_FOLDER='~/<spaas-directory>'
     --label traefik.frontend.rule=Host:spaas.<your-domain>.<your-domain-extension> \
     --name spaas mgranderath/spaas
 ```
