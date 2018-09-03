@@ -26,6 +26,7 @@ var loginCmd = &cobra.Command{
 	Short: "Login to SPaaS server",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		serverDefined()
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Println("Enter username:")
 		username, _ := reader.ReadString('\n')
@@ -34,10 +35,6 @@ var loginCmd = &cobra.Command{
 		bytePassword, _ := terminal.ReadPassword(int(syscall.Stdin))
 		password := string(bytePassword)
 		fmt.Println()
-		if !viper.InConfig("url") {
-			fmt.Println("URL and Port not set in config. Run \"paas setup\"")
-			return
-		}
 		v := url.Values{}
 		v.Add("username", username)
 		v.Add("password", password)

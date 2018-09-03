@@ -31,6 +31,8 @@ var addCmd = &cobra.Command{
 	Long:  ``,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		serverDefined()
+		tokenDefined()
 		token := viper.GetString("token")
 		client := &http.Client{Transport: tr}
 		url := viper.GetString("url") + "/api/app/" + args[0]
@@ -41,6 +43,7 @@ var addCmd = &cobra.Command{
 			fmt.Println(err.Error())
 			return
 		}
+		isLoggedIn(res)
 		scanner := bufio.NewScanner(res.Body)
 		scanner.Split(bufio.ScanLines)
 		for scanner.Scan() {
