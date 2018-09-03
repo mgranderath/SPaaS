@@ -17,6 +17,8 @@ var listCmd = &cobra.Command{
 	Short: "List all applications created",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		serverDefined()
+		tokenDefined()
 		token := viper.GetString("token")
 		client := &http.Client{Transport: tr}
 		url := viper.GetString("url") + "/api/app"

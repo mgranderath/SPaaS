@@ -19,6 +19,8 @@ var inspectCmd = &cobra.Command{
 	Long:  ``,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		serverDefined()
+		tokenDefined()
 		token := viper.GetString("token")
 		client := &http.Client{Transport: tr}
 		url := viper.GetString("url") + "/api/app/" + args[0]
@@ -29,6 +31,7 @@ var inspectCmd = &cobra.Command{
 			fmt.Println(err.Error())
 			return
 		}
+		isLoggedIn(res)
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			fmt.Println(err.Error())
