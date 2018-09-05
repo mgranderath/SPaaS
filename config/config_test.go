@@ -7,11 +7,11 @@ import (
 )
 
 func TestReadConfig(t *testing.T) {
-	v, err := config.ReadConfig("../test", "test", map[string]interface{}{
+	v, err := config.ReadConfig("../test/test.json", map[string]interface{}{
 		"test": true,
 	})
 	if err != nil {
-		t.Fatalf("returned error")
+		t.Fatalf(err.Error())
 	}
 	if v.GetInt("port") != 9000 {
 		t.Fatalf("expected port %v, but got %v", 9000, v.GetInt("port"))
