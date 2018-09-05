@@ -1,31 +1,11 @@
 {
-  "name": "frontend",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
   "dependencies": {
-    "@hubspot/canvas": "^0.0.4",
-    "autoprefixer": "^7.2.1",
-    "babel-preset-react-app": "^3.1.0",
-    "parcel-bundler": "latest",
-    "react": "^16.2.0",
-    "react-dom": "^16.2.0"
-  },
-  "postcss": {
-    "modules": false,
-    "plugins": {
-      "autoprefixer": {
-        "browsers": [
-          ">1%",
-          "last 4 versions",
-          "Firefox ESR",
-          "not ie < 9"
-        ],
-        "flexbox": "no-2009"
-      }
-    }
+    "vue": "^2.5.17"
   },
   "devDependencies": {
-    "cross-env": "^5.1.1"
+    "@vue/component-compiler-utils": "^2.2.0",
+    "babel-preset-env": "^1.7.0",
+    "parcel-bundler": "^1.9.7",
+    "parcel-plugin-vue": "^1.5.0"
   }
 }
