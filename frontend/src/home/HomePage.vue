@@ -1,20 +1,29 @@
 <template>
-    <div>
-        <h1>Hi {{user.username}}!</h1>
-        <p>You're logged in with Vue + Vuex & JWT!!</p>
-        <h3>Users from secure api end point:</h3>
-        <p>
-            <router-link to="/login">Logout</router-link>
-        </p>
-    </div>
+    <section class="section">
+        <p v-model="apps" v-show="apps.length == 0">COll</p>
+        <div class="columns" v-model="apps" v-show="apps.length > 0">
+            <AppListPanel/>
+            <AppDetailFragment/>
+        </div>
+        <CreateAppModal/>
+    </section>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+import CreateAppModal from "../components/CreateAppModal"
+import AppListPanel from "../components/AppListPanel"
+import AppDetailFragment from "../components/AppDetailFragment"
 export default {
-    computed: {
-        user () {
-            return this.$store.state.authentication.user;
-        }
-    }
+  components: {
+    CreateAppModal,
+    AppListPanel,
+    AppDetailFragment
+  },
+  computed: {
+    ...mapGetters({
+      apps: "api/getApps",
+    })
+  },
 };
 </script>

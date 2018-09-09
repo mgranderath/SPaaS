@@ -2,7 +2,8 @@ import { authHeader } from '../_helpers';
 
 export const userService = {
     login,
-    logout
+    logout,
+    handleResponse
 };
 
 function login(username, password) {
