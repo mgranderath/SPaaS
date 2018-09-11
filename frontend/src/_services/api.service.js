@@ -3,7 +3,8 @@ import { userService } from "../_services";
 
 export const apiService = {
   getAll,
-  createApp
+  createApp,
+  inspectApp
 };
 
 function getAll() {
@@ -59,4 +60,24 @@ function createApp(name) {
     .then( body => {
       return body.getReader();
     });
+}
+
+function inspectApp(name) {
+  const requestOptions = {
+    method: "GET",
+    headers: authHeader()
+  };
+  return fetch(`https://spaas.granderath.tech/api/app/${name}`, requestOptions)
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 401) {
+          // auto logout if 401 response returned from api
+          logout();
+          location.reload(true);
+        }
+        const error = (data && data.message) || response.statusText;
+        return Promise.reject(error);
+      }
+      return response.text();
+    })
 }

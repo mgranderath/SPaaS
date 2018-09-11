@@ -3,8 +3,22 @@ import { apiService } from "../_services";
 const initialState = {
   apps: [],
   messages: [],
-  status: {}
+  createAppStatus: -1,
+  inspectAppState: {
+    Name: "",
+    Created: Date.now(),
+    State: {
+      Status: ""
+    }
+  },
+  inspectAppNotDeployed: true,
 };
+
+export const requestStatus = {
+  "": -1,
+  "pending": 0,
+  "success": 1
+}
 
 export const api = {
   namespaced: true,
@@ -20,8 +34,15 @@ export const api = {
           dispatch("alert/error", error, { root: true });
         });
     },
+    resetCreateApp({ commit }) {
+      commit("CREATE_APP_RESET")
+    },
+    clearMessages({ commit }) {
+      commit("clearMessage")
+    },
     createApp({ dispatch, commit }, name) {
       commit("clearMessage")
+      commit("CREATE_APP_PENDING")
       apiService.createApp(name).then(data => {
         new ReadableStream({
           start(controller) {
@@ -30,6 +51,7 @@ export const api = {
                 .read()
                 .then(({ done, value }) => {
                   if (done) {
+                    commit("CREATE_APP_SUCCESS")
                     dispatch("getAll")
                     controller.close()
                     return;
@@ -60,6 +82,12 @@ export const api = {
       .catch( error => {
         dispatch("alert/error", error);
       })
+    },
+    inspectApp({ commit, dispatch }, name) {
+      apiService.inspectApp(name)
+        .then( text => {
+          commit("INSPECT_APP_STATE", JSON.parse(text))
+        })
     }
   },
   mutations: {
@@ -70,11 +98,31 @@ export const api = {
       state.messages.push(item);
     },
     clearMessage(state) {
-      state.messages = []
+      state.messages = [];
+    },
+    CREATE_APP_PENDING(state) {
+      state.createAppStatus = requestStatus["pending"];
+    },
+    CREATE_APP_SUCCESS(state) {
+      state.createAppStatus = requestStatus["success"];
+    },
+    CREATE_APP_RESET(state) {
+      state.createAppStatus = requestStatus[""];
+    },
+    INSPECT_APP_STATE(state, newState) {
+      if (newState["message"]) {
+        state.inspectAppNotDeployed = newState["message"].includes("No such container");
+      } else {
+        state.inspectAppNotDeployed = false;
+        state.inspectAppState = newState;
+      }
     }
   },
   getters: {
     getApps: state => state.apps,
-    getMessages: state => state.messages
+    getMessages: state => state.messages,
+    CREATE_APP: state => state.createAppStatus,
+    INSPECT_APP_STATE: state => state.inspectAppState,
+    INSPECT_APP_NOT_DEPLOYED: state => state.inspectAppNotDeployed
   }
 };

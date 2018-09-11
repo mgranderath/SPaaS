@@ -10,7 +10,7 @@
         <div class="field">
           <label class="label">Name</label>
           <div class="control">
-              <input class="input" type="text" name="name" v-model="name" placeholder="App name" autofocus="">
+              <input class="input" type="text" name="name" v-model="name" placeholder="App name" autofocus="" @input="resetState">
           </div>
         </div>
         <div class="box" v-show="messages.length > 0">
@@ -24,7 +24,7 @@
         </div>
       </section>
       <footer class="modal-card-foot">
-        <button class="button is-success" v-on:click="handleSubmit">Create App</button>
+        <button class="button is-success" v-on:click="handleSubmit" :disabled="createStatus > 0">Create App</button>
         <button class="button" v-on:click="closeModal">Cancel</button>
       </footer>
     </div>
@@ -44,15 +44,22 @@ export default {
   computed: {
     ...mapGetters({
       messages: "api/getMessages",
-      createModal: "viewstate/getCreateModal"
+      createModal: "viewstate/getCreateModal",
+      createStatus: "api/CREATE_APP"
     })
   },
   methods: {
     closeModal: function() {
+      this.$store.dispatch("api/resetCreateApp")
+      this.$store.dispatch("api/clearMessages")
       this.$store.dispatch("viewstate/closeModal", "createModal")
+      this.name = ""
     },
     handleSubmit: function(e) {
       this.$store.dispatch("api/createApp", this.name)
+    },
+    resetState: function(e) {
+      this.$store.dispatch("api/resetCreateApp")
     }
   }
 };

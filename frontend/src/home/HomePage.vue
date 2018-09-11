@@ -27,3 +27,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.columns, .section {
+  height: 100%;
+}
+</style>

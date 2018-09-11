@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="full-height">
     <div v-if="alert.message" class="is-danger notification">{{alert.message}}</div>
     <router-view></router-view>
   </div>
@@ -21,3 +21,13 @@ export default {
   }
 };
 </script>
+
+<style>
+.full-height {
+  height: 100%;
+}
+
+body, html {
+  height: 100%;
+}
+</style>
