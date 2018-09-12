@@ -14,28 +14,52 @@
       </ul>
     </div>
     <div v-show="tabSelected == 0">
-      <div class="tile is-ancestor" v-show="!notDeployed">
-        <div class="tile has-text-centered is-parent">
-          <div class="tile is-child level box">
-            <div>
-              <p class="heading">Deployed</p>
-              <p class="title is-6">{{ new Date(appState.Created).toTimeString() }}</p>
+      <div class="tile is-ancestor is-vertical" v-show="!notDeployed">
+        <div class="tile">
+          <div class="tile has-text-centered is-parent">
+            <div class="tile is-child level box">
+              <div>
+                <p class="heading">Deployed</p>
+                <p class="title is-6">{{ new Date(appState.Created).toTimeString() }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="tile has-text-centered is-parent">
+            <div class="tile is-child level box">
+              <div>
+                <p class="heading">Container Name</p>
+                <p class="title is-6">{{ appState.Name.substring(1) }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="tile has-text-centered is-parent">
+            <div class="tile is-child level box">
+              <div>
+                <p class="heading">State</p>
+                <p class="title is-6">{{ appState.State.Status }}</p>
+              </div>
             </div>
           </div>
         </div>
-        <div class="tile has-text-centered is-parent">
-          <div class="tile is-child level box">
-            <div>
-              <p class="heading">Container Name</p>
-              <p class="title is-6">{{ appState.Name.substring(1) }}</p>
+        <div class="tile">
+          <div class="tile is-parent level">
+            <div class="level-item has-text-centered">
+              <div>
+                <p class="heading">Deploy</p>
+                <a class="button is-link is-large" v-on:click="deployApp" :class="{ 'is-loading' : deployState }">Deploy</a>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="tile has-text-centered is-parent">
-          <div class="tile is-child level box">
-            <div>
-              <p class="heading">State</p>
-              <p class="title is-6">{{ appState.State.Status }}</p>
+            <div class="level-item has-text-centered" v-show="appState.State.Running">
+              <div>
+                <p class="heading">Stop</p>
+                <a class="button is-danger is-large">Stop</a>
+              </div>
+            </div>
+            <div class="level-item has-text-centered" v-show="!appState.State.Running">
+              <div>
+                <p class="heading">Start</p>
+                <a class="button is-danger is-large">Start</a>
+              </div>
             </div>
           </div>
         </div>
@@ -73,7 +97,8 @@ export default {
     ...mapGetters({
       appSelected: "viewstate/getAppSelected",
       appState: "api/INSPECT_APP_STATE",
-      notDeployed: "api/INSPECT_APP_NOT_DEPLOYED"
+      notDeployed: "api/INSPECT_APP_NOT_DEPLOYED",
+      deployState: "api/DEPLOY_APP_STATE"
     }),
     user() {
       return this.$store.state.authentication.user;
@@ -82,6 +107,9 @@ export default {
   methods: {
     selectTab: function(tab) {
       this.tabSelected = tab
+    },
+    deployApp: function() {
+      this.$store.dispatch("api/deployApp", this.appSelected)
     }
   }
 }

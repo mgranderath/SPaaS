@@ -4,7 +4,8 @@ import { userService } from "../_services";
 export const apiService = {
   getAll,
   createApp,
-  inspectApp
+  inspectApp,
+  deployApp
 };
 
 function getAll() {
@@ -57,7 +58,7 @@ function createApp(name) {
       }
       return response.body;
     })
-    .then( body => {
+    .then(body => {
       return body.getReader();
     });
 }
@@ -67,17 +68,41 @@ function inspectApp(name) {
     method: "GET",
     headers: authHeader()
   };
-  return fetch(`https://spaas.granderath.tech/api/app/${name}`, requestOptions)
-    .then(response => {
-      if (!response.ok) {
-        if (response.status === 401) {
-          // auto logout if 401 response returned from api
-          logout();
-          location.reload(true);
-        }
-        const error = (data && data.message) || response.statusText;
-        return Promise.reject(error);
+  return fetch(
+    `https://spaas.granderath.tech/api/app/${name}`,
+    requestOptions
+  ).then(response => {
+    if (!response.ok) {
+      if (response.status === 401) {
+        // auto logout if 401 response returned from api
+        logout();
+        location.reload(true);
       }
-      return response.text();
-    })
+      const error = (data && data.message) || response.statusText;
+      return Promise.reject(error);
+    }
+    return response.text();
+  });
+}
+
+function deployApp(name) {
+  const requestOptions = {
+    method: "POST",
+    headers: authHeader()
+  };
+  return fetch(
+    `https://spaas.granderath.tech/api/app/${name}/deploy`,
+    requestOptions
+  ).then(response => {
+    if (!response.ok) {
+      if (response.status === 401) {
+        // auto logout if 401 response returned from api
+        logout();
+        location.reload(true);
+      }
+      const error = (data && data.message) || response.statusText;
+      return Promise.reject(error);
+    }
+    return response.text();
+  });
 }

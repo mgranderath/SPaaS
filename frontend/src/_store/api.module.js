@@ -4,11 +4,13 @@ const initialState = {
   apps: [],
   messages: [],
   createAppStatus: -1,
+  deployAppStatus: -1,
   inspectAppState: {
     Name: "",
     Created: Date.now(),
     State: {
-      Status: ""
+      Status: "",
+      Running: false
     }
   },
   inspectAppNotDeployed: true,
@@ -88,6 +90,13 @@ export const api = {
         .then( text => {
           commit("INSPECT_APP_STATE", JSON.parse(text))
         })
+    },
+    deployApp({ commit, dispatch }, name) {
+      commit("DEPLOY_APP_PENDING")
+      apiService.deployApp(name)
+        .then( text => {
+          commit("DEPLOY_APP_SUCCESS")
+        })
     }
   },
   mutations: {
@@ -109,6 +118,15 @@ export const api = {
     CREATE_APP_RESET(state) {
       state.createAppStatus = requestStatus[""];
     },
+    DEPLOY_APP_PENDING(state) {
+      state.deployAppStatus = requestStatus["pending"];
+    },
+    DEPLOY_APP_SUCCESS(state) {
+      state.deployAppStatus = requestStatus["success"]
+    },
+    DEPLOY_APP_RESET(state) {
+      state.deployAppStatus = requestStatus[""]
+    },
     INSPECT_APP_STATE(state, newState) {
       if (newState["message"]) {
         state.inspectAppNotDeployed = newState["message"].includes("No such container");
@@ -123,6 +141,7 @@ export const api = {
     getMessages: state => state.messages,
     CREATE_APP: state => state.createAppStatus,
     INSPECT_APP_STATE: state => state.inspectAppState,
-    INSPECT_APP_NOT_DEPLOYED: state => state.inspectAppNotDeployed
+    INSPECT_APP_NOT_DEPLOYED: state => state.inspectAppNotDeployed,
+    DEPLOY_APP_STATE: state => state.deployAppStatus == requestStatus["pending"]
   }
 };
