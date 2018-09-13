@@ -14,11 +14,22 @@
           </div>
         </div>
         <div class="box" v-show="messages.length > 0">
+          <h5 class="title is-5 has-text-centered">Status</h5>
           <ul>
             <li v-for="item in messages" v-model="messages">
-              <span v-if="item.type == 'info'">INFO: </span>
+              <span v-if="item.type == 'info'" style="white-space: pre;">INFO:         </span>
               <span v-else-if="item.type == 'success'">SUCCESS: </span>
               <span v-else>ERROR: </span> {{ item.message }}
+            </li>
+          </ul>
+        </div>
+        <div class="box" v-show="messages.length > 0">
+          <h5 class="title is-5 has-text-centered">Info</h5>
+          <ul>
+            <li v-for="item in messages" v-model="messages" v-show="item.extended">
+              <div v-if="item.extended" v-for="extend in item.extended">
+                <span v-if="extend">{{ extend.key }}: {{ extend.value }}</span>
+              </div>
             </li>
           </ul>
         </div>
