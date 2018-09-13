@@ -5,6 +5,8 @@ const initialState = {
   messages: [],
   createAppStatus: -1,
   deployAppStatus: -1,
+  stopAppStatus: -1,
+  startAppStatus: -1,
   inspectAppState: {
     Name: "",
     Created: Date.now(),
@@ -97,7 +99,23 @@ export const api = {
         .then( text => {
           commit("DEPLOY_APP_SUCCESS")
         })
-    }
+    },
+    stopApp({ commit, dispatch }, name) {
+      commit("STOP_APP_PENDING")
+      apiService.stopApp(name)
+        .then( text => {
+          commit("STOP_APP_SUCCESS")
+          dispatch("inspectApp", name)
+        })
+    },
+    startApp({ commit, dispatch }, name) {
+      commit("START_APP_PENDING")
+      apiService.startApp(name)
+        .then( text => {
+          commit("START_APP_SUCCESS")
+          dispatch("inspectApp", name)
+        })
+    },
   },
   mutations: {
     getAllSuccess(state, list) {
@@ -127,6 +145,24 @@ export const api = {
     DEPLOY_APP_RESET(state) {
       state.deployAppStatus = requestStatus[""]
     },
+    STOP_APP_PENDING(state) {
+      state.stopAppStatus = requestStatus["pending"];
+    },
+    STOP_APP_SUCCESS(state) {
+      state.stopAppStatus = requestStatus["success"]
+    },
+    STOP_APP_RESET(state) {
+      state.stopAppStatus = requestStatus[""]
+    },
+    START_APP_PENDING(state) {
+      state.startAppStatus = requestStatus["pending"];
+    },
+    START_APP_SUCCESS(state) {
+      state.startAppStatus = requestStatus["success"]
+    },
+    START_APP_RESET(state) {
+      state.startAppStatus = requestStatus[""]
+    },
     INSPECT_APP_STATE(state, newState) {
       if (newState["message"]) {
         state.inspectAppNotDeployed = newState["message"].includes("No such container");
@@ -142,6 +178,8 @@ export const api = {
     CREATE_APP: state => state.createAppStatus,
     INSPECT_APP_STATE: state => state.inspectAppState,
     INSPECT_APP_NOT_DEPLOYED: state => state.inspectAppNotDeployed,
-    DEPLOY_APP_STATE: state => state.deployAppStatus == requestStatus["pending"]
+    DEPLOY_APP_STATE: state => state.deployAppStatus == requestStatus["pending"],
+    STOP_APP_STATE: state => state.stopAppStatus == requestStatus["pending"],
+    START_APP_STATE: state => state.startAppStatus == requestStatus["pending"]
   }
 };

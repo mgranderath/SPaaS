@@ -52,13 +52,13 @@
             <div class="level-item has-text-centered" v-show="appState.State.Running">
               <div>
                 <p class="heading">Stop</p>
-                <a class="button is-danger is-large">Stop</a>
+                <a class="button is-danger is-large" v-on:click="stopApp" :class="{ 'is-loading' : stopState }">Stop</a>
               </div>
             </div>
             <div class="level-item has-text-centered" v-show="!appState.State.Running">
               <div>
                 <p class="heading">Start</p>
-                <a class="button is-danger is-large">Start</a>
+                <a class="button is-success is-large" v-on:click="startApp" :class="{ 'is-loading' : startState }">Start</a>
               </div>
             </div>
           </div>
@@ -98,7 +98,9 @@ export default {
       appSelected: "viewstate/getAppSelected",
       appState: "api/INSPECT_APP_STATE",
       notDeployed: "api/INSPECT_APP_NOT_DEPLOYED",
-      deployState: "api/DEPLOY_APP_STATE"
+      deployState: "api/DEPLOY_APP_STATE",
+      stopState: "api/STOP_APP_STATE",
+      startState: "api/START_APP_STATE"
     }),
     user() {
       return this.$store.state.authentication.user;
@@ -110,6 +112,12 @@ export default {
     },
     deployApp: function() {
       this.$store.dispatch("api/deployApp", this.appSelected)
+    },
+    stopApp: function() {
+      this.$store.dispatch("api/stopApp", this.appSelected)
+    },
+    startApp: function() {
+      this.$store.dispatch("api/startApp", this.appSelected)
     }
   }
 }
