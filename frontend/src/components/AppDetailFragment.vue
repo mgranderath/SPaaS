@@ -66,7 +66,20 @@
       </div>
     </div>
     <div v-show="tabSelected == 1">
-      Cool1
+      <table class="table is-striped is-hoverable">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Log</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in logs">
+            <td>{{ item.substr(8, item.indexOf(" ")) }}</td>
+            <td>{{ item.substr(item.indexOf(" ")) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div v-show="tabSelected == 2">
       Cool2
@@ -85,12 +98,14 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { apiService } from "../_services";
 
 export default {
   name: "AppDetailFragment",
   data() {
     return {
-      tabSelected: 0
+      tabSelected: 0,
+      logs: []
     };
   },
   computed: {
@@ -108,19 +123,53 @@ export default {
   },
   methods: {
     selectTab: function(tab) {
-      this.tabSelected = tab
+      this.tabSelected = tab;
+      if (tab == 1) {
+        this.logs = []
+        this.logsApp();
+      }
     },
     deployApp: function() {
-      this.$store.dispatch("api/deployApp", this.appSelected)
+      this.$store.dispatch("api/deployApp", this.appSelected);
     },
     stopApp: function() {
-      this.$store.dispatch("api/stopApp", this.appSelected)
+      this.$store.dispatch("api/stopApp", this.appSelected);
     },
     startApp: function() {
-      this.$store.dispatch("api/startApp", this.appSelected)
+      this.$store.dispatch("api/startApp", this.appSelected);
+    },
+    logsApp: function() {
+      apiService.logs("cool").then(reader => {
+        var decoder = new TextDecoder();
+        function search(ref) {
+          return reader.read().then(function(result) {
+            var decoded = decoder.decode(result.value || new Uint8Array(), {
+              stream: !result.done
+            });
+            const responseObjects = decoded.split("\n");
+            responseObjects
+              .filter(value => {
+                return value != "";
+              })
+              .forEach(value => {
+                const Error = JSON.parse(value).type == "error";
+                if (Error) {
+                  dispatch("alert/error", JSON.parse(value).message, {
+                    root: true
+                  });
+                }
+                ref.logs.push(JSON.parse(value)["message"]);
+              });
+
+            return search();
+          });
+        }
+
+        return search(this);
+      });
     }
   }
-}
+};
 </script>
 
 <style scoped>

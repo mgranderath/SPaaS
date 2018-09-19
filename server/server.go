@@ -19,7 +19,7 @@ func initialize(e *echo.Echo) {
 	routing.GlobalMiddleware(e)
 	routing.SetupRoutes(e)
 	controller.InitDocker()
-	// routing.InitReverseProxy()
+	routing.InitReverseProxy()
 }
 
 func main() {

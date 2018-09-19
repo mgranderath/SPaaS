@@ -1,5 +1,7 @@
 import { authHeader } from "../_helpers";
 import { userService } from "../_services";
+import axios from "axios";
+import httpAdapter from "axios/lib/adapters/http"
 
 export const apiService = {
   getAll,
@@ -7,7 +9,8 @@ export const apiService = {
   inspectApp,
   deployApp,
   stopApp,
-  startApp
+  startApp,
+  logs
 };
 
 function getAll() {
@@ -15,7 +18,7 @@ function getAll() {
     method: "GET",
     headers: authHeader()
   };
-  return fetch(`https://spaas.granderath.tech/api/app`, requestOptions)
+  return fetch(`http://spaas.granderath.tech/api/app`, requestOptions)
     .then(response => {
       if (!response.ok) {
         if (response.status === 401) {
@@ -47,7 +50,7 @@ function createApp(name) {
     method: "POST",
     headers: authHeader()
   };
-  return fetch(`https://spaas.granderath.tech/api/app/${name}`, requestOptions)
+  return fetch(`http://spaas.granderath.tech/api/app/${name}`, requestOptions)
     .then(response => {
       if (!response.ok) {
         if (response.status === 401) {
@@ -71,7 +74,7 @@ function inspectApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `https://spaas.granderath.tech/api/app/${name}`,
+    `http://spaas.granderath.tech/api/app/${name}`,
     requestOptions
   ).then(response => {
     if (!response.ok) {
@@ -93,7 +96,7 @@ function deployApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `https://spaas.granderath.tech/api/app/${name}/deploy`,
+    `http://spaas.granderath.tech/api/app/${name}/deploy`,
     requestOptions
   ).then(response => {
     if (!response.ok) {
@@ -115,7 +118,7 @@ function stopApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `https://spaas.granderath.tech/api/app/${name}/stop`,
+    `http://spaas.granderath.tech/api/app/${name}/stop`,
     requestOptions
   )
   .then(response => {
@@ -138,7 +141,7 @@ function startApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `https://spaas.granderath.tech/api/app/${name}/start`,
+    `http://spaas.granderath.tech/api/app/${name}/start`,
     requestOptions
   )
   .then(response => {
@@ -152,5 +155,28 @@ function startApp(name) {
       return Promise.reject(error);
     }
     return response.text();
+  });
+}
+
+function logs(name) {
+  const requestOptions = {
+    method: "GET",
+    headers: authHeader()
+  };
+  return fetch(`http://spaas.granderath.tech/api/app/${name}/logs`, requestOptions)
+  .then(response => {
+    if (!response.ok) {
+      if (response.status === 401) {
+        // auto logout if 401 response returned from api
+        logout();
+        location.reload(true);
+      }
+      const error = (data && data.message) || response.statusText;
+      return Promise.reject(error);
+    }
+    return response.body;
+  })
+  .then(body => {
+    return body.getReader();
   });
 }
