@@ -2,7 +2,7 @@ var path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     resolve: {
         extensions: ['.js', '.vue']
     },
@@ -25,6 +25,9 @@ module.exports = {
     })],
     devServer: {
         historyApiFallback: true
+    },
+    output: {
+        publicPath: '/static',
     },
     externals: {
         // global app config object

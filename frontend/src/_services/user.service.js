@@ -17,7 +17,7 @@ function login(username, password) {
         body: formData
     };
 
-    return fetch(`https://spaas.granderath.tech/login`, requestOptions)
+    return fetch(`/login`, requestOptions)
         .then(handleResponse)
         .then( user => {
             // login successful if there's a jwt token in the response
