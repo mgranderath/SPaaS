@@ -1,7 +1,5 @@
 import { authHeader } from "../_helpers";
 import { userService } from "../_services";
-import axios from "axios";
-import httpAdapter from "axios/lib/adapters/http"
 
 export const apiService = {
   getAll,
@@ -10,7 +8,8 @@ export const apiService = {
   deployApp,
   stopApp,
   startApp,
-  logs
+  logs,
+  deleteApp
 };
 
 function getAll() {
@@ -178,5 +177,28 @@ function logs(name) {
   })
   .then(body => {
     return body.getReader();
+  });
+}
+
+function deleteApp(name) {
+  const requestOptions = {
+    method: "DELETE",
+    headers: authHeader()
+  };
+  return fetch(
+    `http://spaas.granderath.tech/api/app/${name}`,
+    requestOptions
+  )
+  .then(response => {
+    if (!response.ok) {
+      if (response.status === 401) {
+        // auto logout if 401 response returned from api
+        logout();
+        location.reload(true);
+      }
+      const error = (data && data.message) || response.statusText;
+      return Promise.reject(error);
+    }
+    return response.text();
   });
 }

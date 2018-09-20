@@ -14,7 +14,9 @@ export const viewstate = {
       commit("openModal", message);
     },
     selectApp({ commit, dispatch }, app) {
-      dispatch("api/inspectApp", app, { root: true })
+      if (app != "") {
+        dispatch("api/inspectApp", app, { root: true })
+      }
       commit("selectApp", app)
     }
   },

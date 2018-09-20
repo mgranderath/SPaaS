@@ -98,6 +98,7 @@ export const api = {
       apiService.deployApp(name)
         .then( text => {
           commit("DEPLOY_APP_SUCCESS")
+          dispatch("inspectApp", name)
         })
     },
     stopApp({ commit, dispatch }, name) {

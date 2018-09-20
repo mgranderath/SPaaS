@@ -1,6 +1,6 @@
 <template>
-<div class="column" :class="{ 'is-vertical-center' : (appSelected == '') }">
-  <div v-show="appSelected != ''">
+<div class="column is-fullheight" :class="{ 'is-vertical-center' : (appSelected == '') }">
+  <div class="is-fullheight" v-show="appSelected != ''">
     <nav class="level">
       <div class="level-item has-text-centered">
         <h1 class="title is-h1">{{ appSelected.toUpperCase() }}</h1>
@@ -13,7 +13,15 @@
         <li :class="{ 'is-active' : tabSelected == 2 }" v-on:click="selectTab(2)"><a>Settings</a></li>
       </ul>
     </div>
-    <div v-show="tabSelected == 0">
+    <div v-show="tabSelected == 0" style="height: calc(100% - 77px)">
+      <div v-show="notDeployed" class="level is-vcentered is-fullheight">
+        <div class="level-item has-text-centered">
+          <div>
+            <h3 class="title is-3">Deploy App to see more!</h3>
+            <a class="button is-link is-large text-top" v-on:click="deployApp" :class="{ 'is-loading' : deployState }">Deploy</a>
+          </div>
+        </div>
+      </div>
       <div class="tile is-ancestor is-vertical" v-show="!notDeployed">
         <div class="tile">
           <div class="tile has-text-centered is-parent">
@@ -66,7 +74,7 @@
       </div>
     </div>
     <div v-show="tabSelected == 1">
-      <table class="table is-striped is-hoverable">
+      <table class="table is-striped is-hoverable is-fullwidth">
         <thead>
           <tr>
             <th>Time</th>
@@ -75,14 +83,23 @@
         </thead>
         <tbody>
           <tr v-for="item in logs">
-            <td>{{ item.substr(8, item.indexOf(" ")) }}</td>
-            <td>{{ item.substr(item.indexOf(" ")) }}</td>
+            <td>{{ item.date }}</td>
+            <td>{{ item.message }}</td>
           </tr>
         </tbody>
       </table>
     </div>
     <div v-show="tabSelected == 2">
-      Cool2
+      <table class="table is-fullwidth is-narrow">
+        <tbody>
+          <tr>
+            <td class="settings-td has-text-centered">Delete: </td>
+            <td class="settings-td">
+              <a class="button is-danger" :class="{ 'is-loading' : deleteInProgress }" v-on:click="deleteApp">Delete</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
   <div v-show="appSelected == ''" class="level is-vcentered">
@@ -99,13 +116,15 @@
 <script>
 import { mapGetters } from "vuex";
 import { apiService } from "../_services";
+import dayjs from "dayjs"
 
 export default {
   name: "AppDetailFragment",
   data() {
     return {
       tabSelected: 0,
-      logs: []
+      logs: [],
+      deleteInProgress: false,
     };
   },
   computed: {
@@ -138,8 +157,17 @@ export default {
     startApp: function() {
       this.$store.dispatch("api/startApp", this.appSelected);
     },
+    deleteApp: function() {
+      this.deleteInProgress = true
+      apiService.deleteApp(this.appSelected)
+        .then( result => {
+          this.$store.dispatch("viewstate/selectApp", '', { root: true });
+          this.$store.dispatch("api/getAll", { root: true });
+          this.deleteInProgress = false
+        })
+    },
     logsApp: function() {
-      apiService.logs("cool").then(reader => {
+      apiService.logs(this.appSelected).then(reader => {
         var decoder = new TextDecoder();
         function search(ref) {
           return reader.read().then(function(result) {
@@ -158,7 +186,12 @@ export default {
                     root: true
                   });
                 }
-                ref.logs.push(JSON.parse(value)["message"]);
+                const message = JSON.parse(value)["message"]
+                const test = { 
+                  date: dayjs(message.substr(8, message.indexOf(" ") - 8)).format("YYYY-MM-DD HH:mm:ss"),
+                  message: message.substr(message.indexOf(" "))
+                }
+                ref.logs.push(test);
               });
 
             return search();
@@ -178,6 +211,18 @@ export default {
 .level {
   width: 100%;
   min-width: 100%;
+}
+
+.settings-td {
+  vertical-align: center;
+}
+
+.is-fullheight {
+  height: 100%;
+}
+
+.text-top {
+  margin-top: 1rem;
 }
 </style>
 
