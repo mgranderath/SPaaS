@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	client "docker.io/go-docker"
@@ -100,13 +99,11 @@ func InspectContainer(name string) (types.ContainerJSON, error) {
 
 // ContainerLogs returns log of a container
 func ContainerLogs(name string) (io.ReadCloser, error) {
-	now := time.Now()
-	then := now.Add(time.Minute * -30)
 	return dock.Cli.ContainerLogs(dock.Ctx, name, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Timestamps: true,
 		Follow:     true,
-		Since:      strconv.FormatInt(then.Unix(), 10),
+		Tail:       "100",
 	})
 }

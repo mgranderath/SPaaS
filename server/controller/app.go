@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"bufio"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -35,7 +38,29 @@ func GetLogs(c echo.Context) error {
 			Message: err.Error(),
 		})
 	}
-	return c.Stream(http.StatusOK, "text/plain", resp)
+	defer resp.Close()
+	rd := bufio.NewReader(resp)
+	for {
+		line, err := rd.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			log.Fatalf("read file line error: %v", err)
+			return err
+		}
+		if err := common.EncodeJSONAndFlush(c, Application{
+			Type:    "info",
+			Message: line,
+		}); err != nil {
+			return c.JSON(http.StatusInternalServerError, Application{
+				Type:    "error",
+				Message: err.Error(),
+			})
+		}
+	}
+	return nil
 }
 
 // GetApplication returns a current application

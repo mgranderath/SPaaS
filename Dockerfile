@@ -5,6 +5,7 @@ RUN apk update && apk upgrade && \
 
 WORKDIR /app
 ADD release/SPaaS_server /app/
+ADD frontend/dist/. /app/static
 
 EXPOSE 8080
 
