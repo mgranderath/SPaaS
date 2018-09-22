@@ -56,6 +56,7 @@ var loginCmd = &cobra.Command{
 		}
 		viper.Set("token", token.Token)
 		viper.WriteConfig()
+		fmt.Println("Success logging in")
 	},
 }
 
