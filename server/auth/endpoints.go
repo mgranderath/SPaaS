@@ -11,6 +11,25 @@ import (
 	"github.com/magrandera/SPaaS/config"
 )
 
+// ChangePassword allows for changing the password
+func ChangePassword(c echo.Context) error {
+	newPassword := c.FormValue("password")
+	if len(newPassword) < 8 {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "password has to be at leat 8 characters",
+		})
+	}
+	hashedPassword, err := common.HashPassword(newPassword)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+	config.Cfg.Config.Set("password", hashedPassword)
+	config.Save()
+	return c.NoContent(http.StatusOK)
+}
+
 // Login is the endpoint for login
 func Login(c echo.Context) error {
 	username := c.FormValue("username")
