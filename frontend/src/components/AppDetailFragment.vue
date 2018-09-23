@@ -115,7 +115,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { apiService } from "../_services";
+import { apiService, alertService } from "../_services";
 import dayjs from "dayjs"
 
 export default {
@@ -163,6 +163,7 @@ export default {
         .then( result => {
           this.$store.dispatch("viewstate/selectApp", '', { root: true });
           this.$store.dispatch("api/getAll", { root: true });
+          alertService.success("Deleting App", this.appSelected);
           this.deleteInProgress = false
         })
     },

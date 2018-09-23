@@ -1,4 +1,4 @@
-import { userService } from "../_services";
+import { userService, alertService } from "../_services";
 import { router } from "../_helpers";
 
 const user = JSON.parse(localStorage.getItem("user"));
@@ -20,13 +20,23 @@ export const authentication = {
           router.push("/");
         })
         .catch(error => {
+          alertService.error("Login Error", error);
           commit("loginFailure", error);
-          dispatch("alert/error", error, { root: true });
         });
     },
     logout({ commit }) {
       userService.logout();
       commit("logout");
+      router.push("/login");
+    },
+    changePassword({ dispatch, commit }, newPassword) {
+      commit("changePasswordRequest");
+
+      userService.changePassword(newPassword)
+      .then(response => {
+        commit("changePasswordSuccess")
+        dispatch("viewstate/closeModal", "changePasswordModal", { root: true });
+      })
     }
   },
   mutations: {
@@ -45,6 +55,17 @@ export const authentication = {
     logout(state) {
       state.status = {};
       state.user = null;
+    },
+    changePasswordRequest(state) {
+      state.status = { ...state.status, changingPassword: true };
+    },
+    changePasswordSuccess(state) {
+      state.status = { ...state.status, changingPassword: false };
     }
+  },
+  getters: {
+    getUser: state => state.user,
+    changingPassword: state => state.status.changingPassword,
+    loggingIn: state => state.status.loggingIn
   }
 };

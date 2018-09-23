@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server --open"
+    "start": "webpack-dev-server --open --env dev",
+    "build": "webpack --env prod"
   },
   "dependencies": {
     "dayjs": "^1.7.5",
     "vue": "^2.5.16",
     "vue-router": "^3.0.1",
+    "vue-snotify": "^3.2.1",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
