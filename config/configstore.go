@@ -38,9 +38,9 @@ func New(FilePath string, FileName string) {
 		"password":          defaultPassword,
 		"letsencrypt":       false,
 		"letesencryptEmail": "example@example.com",
-		"compress":          false,
 		"acmePath":          filepath.Join(common.HomeDir(), ".spaas-server", "acme"),
 		"domain":            "example.com",
+		"useDomain":         false,
 	})
 	if err != nil {
 		fmt.Println(err.Error())
