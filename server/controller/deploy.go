@@ -192,10 +192,14 @@ func deploy(name string, messages chan<- Application) {
 	}
 	_ = RemoveContainer(common.SpaasName(name))
 	labels := map[string]string{
-		"traefik.backend":       common.SpaasName(name),
-		"traefik.frontend.rule": "Host:" + name + "." + config.Cfg.Config.GetString("domain"),
-		"traefik.enable":        "true",
-		"traefik.port":          "80",
+		"traefik.backend": common.SpaasName(name),
+		"traefik.enable":  "true",
+		"traefik.port":    "80",
+	}
+	if config.Cfg.Config.GetBool("useDomain") {
+		labels["traefik.frontend.rule"] = "Host:" + name + "." + config.Cfg.Config.GetString("domain")
+	} else {
+		labels["traefik.frontend.rule"] = "PathPrefixStrip:/spaas/" + name
 	}
 	_, err = CreateContainer(
 		container.Config{
