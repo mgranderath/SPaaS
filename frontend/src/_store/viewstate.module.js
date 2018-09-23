@@ -1,5 +1,6 @@
 const initialState = {
   "createModal": false,
+  "changePasswordModal": false,
   "appSelected": ""
 };
 
@@ -33,6 +34,7 @@ export const viewstate = {
   },
   getters: {
     getCreateModal: state => state["createModal"],
+    getChangePasswordModal: state => state["changePasswordModal"],
     getAppSelected: state => state["appSelected"]
   }
 };

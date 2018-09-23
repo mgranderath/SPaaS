@@ -24,10 +24,11 @@
 
 <script>
 import { mapGetters } from "vuex";
+
 export default {
   name: "AppListPanel",
   created() {
-    this.$store.dispatch("api/getAll")
+    this.$store.dispatch("api/getAll");
   },
   computed: {
     ...mapGetters({
@@ -40,7 +41,7 @@ export default {
       this.$store.dispatch("viewstate/openModal", "createModal");
     },
     selectApp: function(name) {
-      this.$store.dispatch("viewstate/selectApp", name)
+      this.$store.dispatch("viewstate/selectApp", name);
     }
   }
 };

@@ -1,33 +1,29 @@
 <template>
   <div class="full-height">
-    <div v-if="alert.message" class="is-danger notification">{{alert.message}}</div>
     <router-view></router-view>
   </div>
 </template>
 
 <script>
+import { alertService } from "../_services";
+
 export default {
   name: "app",
-  computed: {
-    alert() {
-      return this.$store.state.alert;
-    }
-  },
-  watch: {
-    $route(to, from) {
-      // clear alert on location change
-      this.$store.dispatch("alert/clear");
-    }
+  created() {
+    alertService.init(this);
   }
 };
 </script>
 
 <style>
+@import "~vue-snotify/styles/material.css";
+
 .full-height {
   height: 100%;
 }
 
-body, html {
+body,
+html {
   height: 100%;
 }
 </style>

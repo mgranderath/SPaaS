@@ -17,12 +17,13 @@
                                     <input class="input is-large" v-model="password" name="password" type="password" placeholder="Your Password" :class="{ 'is-danger': submitted && !password }">
                                 </div>
                             </div>
-                            <button class="button is-block is-info is-large is-fullwidth" :disabled="loggingIn">Login</button>
+                            <button class="button is-block is-info is-large is-fullwidth" :class="{ 'is-loading' : loggingIn }">Login</button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+        <vue-snotify></vue-snotify>
     </section>
 </template>
 
@@ -32,6 +33,7 @@
 
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {
@@ -41,6 +43,9 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({
+      loggingIn: "authentication/loggingIn"
+    }),
     loggingIn() {
       return this.$store.state.authentication.status.loggingIn;
     }
