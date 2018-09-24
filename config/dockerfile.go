@@ -15,31 +15,12 @@ type Dockerfile struct {
 	Length    int
 }
 
-const dockerfileTemplate = `FROM alpine:3.5
+const dockerfileTemplate = `FROM gliderlabs/alpine:3.4
 WORKDIR /usr/src/app
-{{if eq .Type "python"}}
-RUN apk add --no-cache python3 && \
-    python3 -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip3 install --upgrade pip setuptools && \
-    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
-    if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
-    rm -r /root/.cache
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
-{{end}}
 {{if eq .Type "nodejs"}}
-RUN apk update && apk upgrade && apk add nodejs
+RUN apk add --no-cache nodejs
 COPY package*.json ./
 RUN npm install
-{{end}}
-{{if eq .Type "ruby"}}
-RUN apk update && \
-    apk upgrade && \
-    apk add ruby
-COPY Gemfile /usr/src/app/Gemfile
-COPY Gemfile.lock /usr/src/app/Gemfile.lock 
-RUN bundle install
 {{end}}
 EXPOSE 5000:5000
 COPY . .

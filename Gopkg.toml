@@ -19,31 +19,14 @@
 #   name = "github.com/x/y"
 #   version = "2.4.0"
 #
-# [prune]
-#   non-go = false
-#   go-tests = true
-#   unused-packages = true
-
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"
   version = "3.2.0"
 
 [[constraint]]
-  name = "github.com/fatih/color"
-  version = "1.7.0"
-
-[[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.5"
-
-[[constraint]]
-  name = "github.com/mitchellh/go-homedir"
-  version = "1.0.0"
-
-[[constraint]]
-  name = "github.com/spf13/cobra"
-  version = "0.0.3"
 
 [[constraint]]
   name = "github.com/spf13/viper"
