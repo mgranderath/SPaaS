@@ -2,6 +2,8 @@
 
 A lightweight Heroku like PaaS.
 
+Link to [CLI](https://github.com/magrandera/SPaaS-cli)
+
 # Info
 
 Currently only nodejs deployments 
