@@ -1,60 +1,102 @@
-# PiaaS [WIP]
+# SPaaS (Small Product as a Service)
 
-A heroku like PaaS for the Raspberry Pi or any linux system.
+A lightweight Heroku like PaaS.
 
-## Status
-- [ ] Basic web interface
-- [ ] Container tracking
-- [x] Basic deployment functionality
+Link to [CLI](https://github.com/magrandera/SPaaS-cli)
 
-## Building
+# Info
 
-+ First of all fetch all the packages without installing.
-    ```shell
-    go get -d github.com/magrandera/PiaaS-go
-    ```
-+ `cd` into the project directory
-    ```shell
-    cd $GOPATH/src/github.com/magrandera/PiaaS-go
-    ```
-+ install dependencies with glide
-    ```shell
-    glide install --strip-vendor
-    ```
-+ build the binaries using the makefile
-    ```shell
-    make
-    ```
-+ binaries will be in /build folder
+Currently only nodejs deployments 
 
-## Installation & Usage
+# Install Server
 
-Currently supported languages:
-- Python3
-- NodeJs
-- Ruby
+### Prerequisites
+- Docker
+- SSH into Server
 
-**Server**: [here](doc/GUIDE_Server.md)
-**Client**: [here](doc/GUIDE_Client.md)
+## With Domain
 
-## Built With
+You have to have your domain setup already.
 
-* [Glide](https://github.com/Masterminds/glide) - Dependency Management
-* [cli](https://github.com/urfave/cli) - CLI framework
-* [moby](https://github.com/moby/moby) - Docker repository
+Execute on Server:
+```
+docker run -d \ 
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ~/<spaas-directory>:/root/.spaas \
+    -e HOST_CONFIG_FOLDER='~/<spaas-directory>'
+    --label traefik.frontend.rule=Host:spaas.<your-domain>.<your-domain-extension> \
+    --name spaas mgranderath/spaas
+```
 
-## Contributing
+Now you should be able to access the dashboard at `http://spaas.<your-domain>.<your-domain-extension>`
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+## Without Domain
 
-## Authors
+Execute on Server:
+```
+docker run -d \ 
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ~/<spaas-directory>:/root/.spaas \
+    -e HOST_CONFIG_FOLDER='~/<spaas-directory>'
+    --label traefik.frontend.rule=PathPrefixStrip:/spaas \
+    --name spaas mgranderath/spaas
+```
+Now you should be able to access the dashboard at `http://<your-ip>/spaas` 
 
-* **Malte Granderath** - *Initial work* - [magrandera](https://github.com/magrandera)
+# Next Step (Modifying config)
 
-See also the list of [contributors](https://github.com/magrandera/PiaaS-go/graphs/contributors) who participated in this project.
+Next you should modify the config to your liking. There should be one created in `~/<spaas-directory>`. It's nane is `.spaas.json`.
 
-## License
+You can modify the following settings:
 
-This project is licensed under the Apache2.0 License - see the [LICENSE.md](LICENSE.md) file for details
+| Setting | Default | Explained |
+| ------- | ------- | --------- |
+| `username` | spaas | this is the username you use to login |
+| `letsencrypt` | false | use automatic letsencrypt ssl certs (only with domains) | 
+| `letsEncryptEmail` | "example@example.com" | this is the email that will be used to request certs |
+| `domain` | example.com | the domain to be used for deployments |
+| `useDomain` | false | use the domain for deployments |
 
-## Acknowledgments
+If you change the `letsencrypt` or `letsEncryptEmail` settings you should remove the traefik container (`docker rm -f spaas-traefik`) and then restart SPaaS (`docker restart spaas`).
+
+## Important Info
+
+- The default login credentials are `spaas`:`smallpaas`
+- Without a domain the deployed apps can be accessed under `<your-ip>/spaas/<app-name>`
+- With a domain the deployed apps can be accessed under `<app-name>.<your-domain>.<your-domain-extension>`
+- **!!! You should change the password as soon as possible. Either using the dashboard or the cli application !!!**
+
+# Deploying a App
+
+**!!! Only nodejs is supported for now !!!**
+
+## Create a new app
+
+When you create a new app using either the cli or the dashboard you should get back a path called `RepoPath`. This is the location of the git repo on the server. 
+
+You should add the following as a git remote for the project you want to deploy:
+```bash
+git remote add spaas <ssh-server-username>@<server>:<repo-path>
+```
+
+## Before Deploying
+
+You have to specify the start command for the server to know which command to run to start the web server.
+
+Add a file `spaas.json` in the project directory.
+
+```json
+{
+  "start": <app-start-command>
+}
+```
+
+## Deploying
+
+To deploy the app you just have to follow the usual procedure to push to a git repository.
+
+1. `git add .`
+2. `git commit -m "message"`
+3. `git push spaas master`
+
+If the push succeeds and you do not see any error you should be able to see your app on the address that is specified above depending on your configuration.

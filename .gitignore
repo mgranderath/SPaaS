@@ -1,8 +1,12 @@
 .vscode
 Applications
 bin
-build
+release
 vendor
+TODO
+frontend/node_modules
+frontend/.cache
+frontend/dist
 
 *.exe
 *.dll
@@ -33,3 +37,4 @@ Thumbs.db
 *.swo
 *.lnk
 *~
+*.sqlite
