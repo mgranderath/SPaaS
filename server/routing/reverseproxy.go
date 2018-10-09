@@ -32,7 +32,7 @@ func InitReverseProxy() {
 		"--docker", "--docker.watch",
 		"--defaultEntryPoints=http",
 		"--entryPoints=Name:http Address::80 Compress:off",
-		"--docker.domain=granderath.tech",
+		"--docker.domain=" + config.Cfg.Config.GetString("domain"),
 		"--debug",
 		"--logLevel=DEBUG",
 	}

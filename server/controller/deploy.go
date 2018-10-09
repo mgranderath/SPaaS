@@ -17,6 +17,26 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
+func createDeployDir(deployPath string, messages chan<- Application) error {
+	// Creating directory
+	messages <- Application{
+		Type:    "info",
+		Message: "Creating directories",
+	}
+	if err := os.RemoveAll(deployPath); err != nil {
+		return err
+	}
+	err := os.MkdirAll(deployPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Creating directories",
+	}
+	return nil
+}
+
 func deploy(name string, messages chan<- Application) {
 	appPath := filepath.Join(basePath, "applications", name)
 	deployPath := filepath.Join(appPath, "deploy")
@@ -29,20 +49,7 @@ func deploy(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
-	// Creating directory
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating directories",
-	}
-	if err := os.RemoveAll(deployPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	err := os.MkdirAll(deployPath, os.ModePerm)
+	err := createDeployDir(deployPath, messages)
 	if err != nil {
 		messages <- Application{
 			Type:    "error",
@@ -50,10 +57,6 @@ func deploy(name string, messages chan<- Application) {
 		}
 		close(messages)
 		return
-	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating directories",
 	}
 	// Clone repository
 	messages <- Application{

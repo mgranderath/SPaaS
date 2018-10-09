@@ -9,33 +9,23 @@ import (
 	"github.com/magrandera/SPaaS/common"
 )
 
-func delete(name string, messages chan<- Application) {
-	appPath := filepath.Join(basePath, "applications", name)
-	if !common.Exists(appPath) {
-		messages <- Application{
-			Type:    "error",
-			Message: "Does not exist",
-		}
-		close(messages)
-		return
-	}
+func removeDirs(appPath string, messages chan<- Application) error {
 	// Remove directories
 	messages <- Application{
 		Type:    "info",
 		Message: "Removing directories",
 	}
 	if err := os.RemoveAll(appPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
+		return err
 	}
 	messages <- Application{
 		Type:    "success",
 		Message: "Removing directories",
 	}
+	return nil
+}
+
+func removeDockerImageAndContainer(name string, messages chan<- Application) error {
 	messages <- Application{
 		Type:    "info",
 		Message: "Removing docker container",
@@ -54,6 +44,29 @@ func delete(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Removing docker image",
 	}
+	return nil
+}
+
+func delete(name string, messages chan<- Application) {
+	appPath := filepath.Join(basePath, "applications", name)
+	if !common.Exists(appPath) {
+		messages <- Application{
+			Type:    "error",
+			Message: "Does not exist",
+		}
+		close(messages)
+		return
+	}
+	err := removeDirs(appPath, messages)
+	if err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
+		}
+		close(messages)
+		return
+	}
+	removeDockerImageAndContainer(name, messages)
 	close(messages)
 }
 

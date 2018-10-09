@@ -13,6 +13,78 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
+func makeDirsAndInitGit(repoPath string, messages chan<- Application) error {
+	// Create Directories
+	messages <- Application{
+		Type:    "info",
+		Message: "Creating directories",
+	}
+	err := os.MkdirAll(repoPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Creating directories",
+	}
+	// Initialize the git repository
+	messages <- Application{
+		Type:    "info",
+		Message: "Creating git repo",
+	}
+	if _, err := git.PlainInit(repoPath, true); err != nil {
+		return err
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Creating git repo",
+	}
+	return nil
+}
+
+func makePostReceiveHook(name string, repoPath string, messages chan<- Application) error {
+	// Create git post-receive hook
+	messages <- Application{
+		Type:    "info",
+		Message: "Creating git receive hook",
+	}
+	err := os.MkdirAll(filepath.Join(repoPath, "hooks"), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(filepath.Join(repoPath, "hooks", "post-receive"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	token, err := auth.GetToken()
+	if err != nil {
+		return err
+	}
+	prefix := "http://"
+	if config.Cfg.Config.GetBool("letsencrypt") {
+		prefix = "https://"
+	}
+	postReceive, err := hook.CreatePostReceive(name, token, "spaas."+config.Cfg.Config.GetString("domain"), prefix)
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(postReceive)
+	if err != nil {
+		return err
+	}
+	// Make the hook executable
+	err = os.Chmod(filepath.Join(repoPath, "hooks", "post-receive"), 0755)
+	if err != nil {
+		return err
+	}
+	messages <- Application{
+		Type:    "success",
+		Message: "Creating git receive hook",
+	}
+	return nil
+}
+
 func create(name string, messages chan<- Application) {
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
@@ -26,13 +98,7 @@ func create(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
-	// Create Directories
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating directories",
-	}
-	err := os.MkdirAll(repoPath, os.ModePerm)
-	if err != nil {
+	if err := makeDirsAndInitGit(repoPath, messages); err != nil {
 		messages <- Application{
 			Type:    "error",
 			Message: err.Error(),
@@ -40,95 +106,13 @@ func create(name string, messages chan<- Application) {
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating directories",
-	}
-	// Initialize the git repository
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating git repo",
-	}
-	if _, err := git.PlainInit(repoPath, true); err != nil {
+	if err := makePostReceiveHook(name, repoPath, messages); err != nil {
 		messages <- Application{
 			Type:    "error",
 			Message: err.Error(),
 		}
 		close(messages)
 		return
-	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating git repo",
-	}
-	// Create git post-receive hook
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating git receive hook",
-	}
-	err = os.MkdirAll(filepath.Join(repoPath, "hooks"), os.ModePerm)
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	file, err := os.Create(filepath.Join(repoPath, "hooks", "post-receive"))
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	defer file.Close()
-	token, err := auth.GetToken()
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	prefix := "http://"
-	if config.Cfg.Config.GetBool("letsencrypt") {
-		prefix = "https://"
-	}
-	postReceive, err := hook.CreatePostReceive(name, token, "spaas."+config.Cfg.Config.GetString("domain"), prefix)
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	_, err = file.WriteString(postReceive)
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	// Make the hook executable
-	err = os.Chmod(filepath.Join(repoPath, "hooks", "post-receive"), 0755)
-	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
-		close(messages)
-		return
-	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating git receive hook",
 	}
 	messages <- Application{
 		Type:    "success",
