@@ -51,7 +51,11 @@ func InitReverseProxy() {
 	if config.Cfg.Config.GetBool("letsencrypt") {
 		cmd = append(cmd, letsencrypt...)
 	}
+<<<<<<< HEAD
 	container, err := controller.CreateContainer(
+=======
+	containerID, err := controller.CreateContainer(
+>>>>>>> master
 		container.Config{
 			Image: "traefik:1.7-alpine",
 			ExposedPorts: nat.PortSet{
@@ -84,7 +88,11 @@ func InitReverseProxy() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+<<<<<<< HEAD
 	if err := controller.StartContainer(container.ID); err != nil {
+=======
+	if err := controller.StartContainer(containerID.ID); err != nil {
+>>>>>>> master
 		log.Fatal(err.Error())
 	}
 	log.Println("Traefik is now installed")
