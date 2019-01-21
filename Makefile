@@ -1,12 +1,24 @@
-all: build
+all: server
 
-build:
+server:
 	mkdir -p release
-	go build -o release/SPaaS_server ./server
+	go build CGO_ENABLED=0 -o release/SPaaS_server ./server
 
-build_linux:
+server_linux:
 	mkdir -p release
-	GOOS=linux GOARCH=amd64 go build -o release/SPaaS_server ./server
+	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o release/SPaaS_server ./server
+
+frontend:
+	npm run build --prefix ./frontend
+
+frontend_deps:
+	cd frontend; npm install
+
+release_dev:
+	docker build -t mgranderath/spaas:dev .
+
+release:
+	docker build -t mgranderath/spaas .
 
 test:
 	go test ./... -v
@@ -14,4 +26,4 @@ test:
 fmt:
 	go fmt ./... -v
 
-.PHONY: build test fmt
+.PHONY: server frontend release release_dev test fmt

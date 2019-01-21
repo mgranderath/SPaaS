@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/magrandera/SPaaS/config"
+	"github.com/mgranderath/SPaaS/config"
 )
 
 func TestReadConfig(t *testing.T) {

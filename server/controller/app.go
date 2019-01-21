@@ -10,7 +10,7 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/magrandera/SPaaS/common"
+	"github.com/mgranderath/SPaaS/common"
 )
 
 // Application stores information about the application

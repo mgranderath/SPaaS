@@ -2,7 +2,7 @@
 
 A lightweight Heroku like PaaS.
 
-Link to [CLI](https://github.com/magrandera/SPaaS-cli)
+Link to [CLI](https://github.com/mgranderath/SPaaS-cli)
 
 # Info
 

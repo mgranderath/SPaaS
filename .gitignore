@@ -4,6 +4,7 @@ bin
 build
 release
 vendor
+.vendor-new
 TODO
 frontend/node_modules
 frontend/.cache

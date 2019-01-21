@@ -6,10 +6,10 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo"
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
-	"github.com/magrandera/SPaaS/server/controller"
-	"github.com/magrandera/SPaaS/server/routing"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
+	"github.com/mgranderath/SPaaS/server/controller"
+	"github.com/mgranderath/SPaaS/server/routing"
 )
 
 func initialize(e *echo.Echo) {

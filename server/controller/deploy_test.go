@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -25,7 +25,7 @@ func TestItDeploysApp(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	_, err = git.PlainClone(repoPath, true, &git.CloneOptions{
-		URL: "https://github.com/magrandera/SPaaS-node-js-example.git",
+		URL: "https://github.com/mgranderath/SPaaS-node-js-example.git",
 	})
 	if err != nil {
 		testRemoveApp(appPath, t)

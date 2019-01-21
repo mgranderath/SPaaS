@@ -4,8 +4,8 @@ RUN apk update && apk upgrade && \
     apk add --no-cache git
 
 WORKDIR /app
-ADD release/SPaaS_server /app/
-ADD frontend/dist/. /app/static
+ADD release/SPaaS_server .
+ADD frontend/dist/. ./static
 
 EXPOSE 8080
 

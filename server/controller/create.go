@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/labstack/echo"
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
-	"github.com/magrandera/SPaaS/server/auth"
-	"github.com/magrandera/SPaaS/server/hook"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
+	"github.com/mgranderath/SPaaS/server/auth"
+	"github.com/mgranderath/SPaaS/server/hook"
 	git "gopkg.in/src-d/go-git.v4"
 )
 

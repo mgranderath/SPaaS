@@ -6,9 +6,9 @@ import (
 	"docker.io/go-docker/api/types/container"
 	"docker.io/go-docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
-	"github.com/magrandera/SPaaS/server/controller"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
+	"github.com/mgranderath/SPaaS/server/controller"
 )
 
 // InitReverseProxy initializes the reverse proxy
@@ -32,23 +32,23 @@ func InitReverseProxy() {
 		"--docker", "--docker.watch",
 		"--defaultEntryPoints=http",
 		"--entryPoints=Name:http Address::80 Compress:off",
-		"--docker.domain=granderath.tech",
+		"--docker.domain=" + config.Cfg.Config.GetString("domain"),
 		"--debug",
 		"--logLevel=DEBUG",
 	}
-	letsencrypt := []string{
-		"--acme",
-		"--acme.email=" + config.Cfg.Config.GetString("letsencryptEmail"),
-		"--acme.storage=/var/acme/acme.json",
-		"--acme.httpchallenge.entrypoint=http",
-		"--acme.entrypoint=https",
-		"--acme.onhostrule=true",
-		"--accesslogsfile=/var/acme/access.log",
-		"--entryPoints=Name:https Address::443 TLS Compress:off",
-		"--entryPoints=Name:http Address::80 Redirect.EntryPoint:https Compress:off",
-		"--defaultEntryPoints=https,http",
-	}
 	if config.Cfg.Config.GetBool("letsencrypt") {
+		letsencrypt := []string{
+			"--acme",
+			"--acme.email=" + config.Cfg.Config.GetString("letsencryptEmail"),
+			"--acme.storage=/var/acme/acme.json",
+			"--acme.httpchallenge.entrypoint=http",
+			"--acme.entrypoint=https",
+			"--acme.onhostrule=true",
+			"--accesslogsfile=/var/acme/access.log",
+			"--entryPoints=Name:https Address::443 TLS Compress:off",
+			"--entryPoints=Name:http Address::80 Redirect.EntryPoint:https Compress:off",
+			"--defaultEntryPoints=https,http",
+		}
 		cmd = append(cmd, letsencrypt...)
 	}
 	containerID, err := controller.CreateContainer(

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/magrandera/SPaaS/common"
+	"github.com/mgranderath/SPaaS/common"
 )
 
 func stop(name string, messages chan<- Application) {

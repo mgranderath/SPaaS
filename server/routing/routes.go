@@ -3,9 +3,9 @@ package routing
 import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/magrandera/SPaaS/config"
-	"github.com/magrandera/SPaaS/server/auth"
-	"github.com/magrandera/SPaaS/server/controller"
+	"github.com/mgranderath/SPaaS/config"
+	"github.com/mgranderath/SPaaS/server/auth"
+	"github.com/mgranderath/SPaaS/server/controller"
 )
 
 // SetupRoutes sets up the routes for the app

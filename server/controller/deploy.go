@@ -12,8 +12,8 @@ import (
 	"docker.io/go-docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	"github.com/labstack/echo"
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
@@ -134,13 +134,41 @@ func deploy(name string, messages chan<- Application) {
 		Type:    "info",
 		Message: "Packaging app",
 	}
-	if err := config.CreateDockerfile(dockerfile, appPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
+	if dockerfile.Type == "nodejs" {
+		nodeDockerfile := config.NodeJsDockerfile{
+			Command:        dockerfile.Command,
+			VersionDefined: false,
 		}
-		close(messages)
-		return
+		if err := config.CreateNodeJsDockerfile(nodeDockerfile, appPath); err != nil {
+			messages <- Application{
+				Type:    "error",
+				Message: err.Error(),
+			}
+			close(messages)
+			return
+		}
+	} else if dockerfile.Type == "ruby" {
+		nodeDockerfile := config.NodeJsDockerfile{
+			Command:        dockerfile.Command,
+			VersionDefined: false,
+		}
+		if err := config.CreateRubyDockerfile(nodeDockerfile, appPath); err != nil {
+			messages <- Application{
+				Type:    "error",
+				Message: err.Error(),
+			}
+			close(messages)
+			return
+		}
+	} else {
+		if err := config.CreateDockerfile(dockerfile, appPath); err != nil {
+			messages <- Application{
+				Type:    "error",
+				Message: err.Error(),
+			}
+			close(messages)
+			return
+		}
 	}
 	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
 	cmd.Dir = deployPath + "/"

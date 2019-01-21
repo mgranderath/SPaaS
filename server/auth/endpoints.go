@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/magrandera/SPaaS/common"
+	"github.com/mgranderath/SPaaS/common"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/magrandera/SPaaS/config"
+	"github.com/mgranderath/SPaaS/config"
 )
 
 // ChangePassword allows for changing the password

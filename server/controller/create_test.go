@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"docker.io/go-docker/api/types"
-	"github.com/magrandera/SPaaS/common"
-	"github.com/magrandera/SPaaS/config"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
 )
 
 func testRemoveApp(appPath string, t *testing.T) {

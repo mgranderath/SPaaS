@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/magrandera/SPaaS/common"
+	"github.com/mgranderath/SPaaS/common"
 	"github.com/spf13/viper"
 )
 
@@ -30,6 +30,10 @@ func New(FilePath string, FileName string) {
 	err := os.MkdirAll(filepath.Join(common.HomeDir(), ".spaas", "acme"), os.ModePerm)
 	if err != nil {
 		log.Fatalln("Could not create acme folder")
+	}
+	err = os.MkdirAll(filepath.Join(common.HomeDir(), ".spaas", "applications"), os.ModePerm)
+	if err != nil {
+		log.Fatalln("Could not create applications folder")
 	}
 	defaultPassword, _ := common.HashPassword("smallpaas")
 	config, err := ReadConfig(FilePath+"/"+FileName, map[string]interface{}{
