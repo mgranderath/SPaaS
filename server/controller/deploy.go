@@ -18,6 +18,9 @@ import (
 )
 
 func deploy(name string, messages chan<- Application) {
+	var (
+		appType string
+	)
 	appPath := filepath.Join(basePath, "applications", name)
 	deployPath := filepath.Join(appPath, "deploy")
 	repoPath := filepath.Join(appPath, "repo")
@@ -110,11 +113,11 @@ func deploy(name string, messages chan<- Application) {
 		Message: "Detecting app type",
 	}
 	if common.Exists(filepath.Join(deployPath, "requirements.txt")) {
-		dockerfile.Type = "python"
+		appType = "python"
 	} else if common.Exists(filepath.Join(deployPath, "package.json")) {
-		dockerfile.Type = "nodejs"
+		appType = "nodejs"
 	} else if common.Exists(filepath.Join(deployPath, "Gemfile")) {
-		dockerfile.Type = "ruby"
+		appType = "ruby"
 	} else {
 		messages <- Application{
 			Type:    "error",
@@ -127,48 +130,24 @@ func deploy(name string, messages chan<- Application) {
 		Type:    "success",
 		Message: "Detecting app type",
 		Extended: []KeyValue{
-			{Key: "Type", Value: dockerfile.Type},
+			{Key: "Type", Value: appType},
 		},
 	}
 	messages <- Application{
 		Type:    "info",
 		Message: "Packaging app",
 	}
-	if dockerfile.Type == "nodejs" {
-		nodeDockerfile := config.NodeJsDockerfile{
-			Command:        dockerfile.Command,
-			VersionDefined: false,
+	dockerfileConfig := config.Dockerfile{
+		Command:        dockerfile.Command,
+		VersionDefined: false,
+	}
+	if err := config.CreateDockerfile(appType, dockerfileConfig, appPath); err != nil {
+		messages <- Application{
+			Type:    "error",
+			Message: err.Error(),
 		}
-		if err := config.CreateNodeJsDockerfile(nodeDockerfile, appPath); err != nil {
-			messages <- Application{
-				Type:    "error",
-				Message: err.Error(),
-			}
-			close(messages)
-			return
-		}
-	} else if dockerfile.Type == "ruby" {
-		nodeDockerfile := config.NodeJsDockerfile{
-			Command:        dockerfile.Command,
-			VersionDefined: false,
-		}
-		if err := config.CreateRubyDockerfile(nodeDockerfile, appPath); err != nil {
-			messages <- Application{
-				Type:    "error",
-				Message: err.Error(),
-			}
-			close(messages)
-			return
-		}
-	} else {
-		if err := config.CreateDockerfile(dockerfile, appPath); err != nil {
-			messages <- Application{
-				Type:    "error",
-				Message: err.Error(),
-			}
-			close(messages)
-			return
-		}
+		close(messages)
+		return
 	}
 	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
 	cmd.Dir = deployPath + "/"
