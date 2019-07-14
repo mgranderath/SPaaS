@@ -5,6 +5,7 @@ build
 release
 vendor
 .vendor-new
+.idea
 TODO
 frontend/node_modules
 frontend/.cache

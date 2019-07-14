@@ -2,7 +2,11 @@ all: server
 
 server:
 	mkdir -p release
-	go build CGO_ENABLED=0 -o release/SPaaS_server ./server
+	CGO_ENABLED=0 go build -o release/SPaaS_server ./server
+
+javascript:
+	mkdir -p release
+	CGO_ENABLED=0 go build -o release/javascript ./buildpacks/javascript
 
 server_linux:
 	mkdir -p release

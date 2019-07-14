@@ -1,4 +1,4 @@
-make build_linux
+make server_linux
 cd frontend
 ./node_modules/.bin/webpack --env prod
 cd ..

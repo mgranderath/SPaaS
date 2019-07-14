@@ -1,0 +1,5 @@
+package javascript
+
+func main() {
+
+}
