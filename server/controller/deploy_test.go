@@ -1,17 +1,18 @@
 package controller
 
 import (
+	"github.com/mgranderath/SPaaS/server/model"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/mgranderath/SPaaS/common"
 	"github.com/mgranderath/SPaaS/config"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 func TestItDeploysApp(t *testing.T) {
-	messages := make(chan Application)
+	messages := make(chan model.Status)
 	name := "test"
 	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
 	InitDocker()

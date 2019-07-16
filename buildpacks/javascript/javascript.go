@@ -1,5 +1,0 @@
-package javascript
-
-func main() {
-
-}

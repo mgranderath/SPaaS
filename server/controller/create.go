@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"github.com/labstack/gommon/log"
+	"github.com/mgranderath/SPaaS/server/model"
+	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,87 +13,54 @@ import (
 	"github.com/mgranderath/SPaaS/config"
 	"github.com/mgranderath/SPaaS/server/auth"
 	"github.com/mgranderath/SPaaS/server/hook"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
-func create(name string, messages chan<- Application) {
+func create(name string, messages model.StatusChannel) {
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
 	externalRepoPath := filepath.Join(config.Cfg.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
 	// Check if app already exists
 	if common.Exists(appPath) {
-		messages <- Application{
-			Type:    "error",
-			Message: "Already exists",
-		}
+		messages.SendError(errors.New("Already exists"))
 		close(messages)
 		return
 	}
 	// Create Directories
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating directories",
-	}
+	messages.SendInfo("Creating directories")
 	err := os.MkdirAll(repoPath, os.ModePerm)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating directories",
-	}
+	messages.SendSuccess("Creating directories")
 	// Initialize the git repository
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating git repo",
-	}
+	messages.SendInfo("Creating repository")
 	if _, err := git.PlainInit(repoPath, true); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating git repo",
-	}
+	messages.SendSuccess("Creating repository")
 	// Create git post-receive hook
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating git receive hook",
-	}
+	messages.SendInfo("Creating receive hook")
 	err = os.MkdirAll(filepath.Join(repoPath, "hooks"), os.ModePerm)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	file, err := os.Create(filepath.Join(repoPath, "hooks", "post-receive"))
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	defer file.Close()
 	token, err := auth.GetToken()
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
@@ -100,40 +70,28 @@ func create(name string, messages chan<- Application) {
 	}
 	postReceive, err := hook.CreatePostReceive(name, token, "spaas."+config.Cfg.Config.GetString("domain"), prefix)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	_, err = file.WriteString(postReceive)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	// Make the hook executable
 	err = os.Chmod(filepath.Join(repoPath, "hooks", "post-receive"), 0755)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating git receive hook",
-	}
-	messages <- Application{
+	messages.SendSuccess("Creating git receive hook")
+	messages <- model.Status{
 		Type:    "success",
 		Message: "Creating app",
-		Extended: []KeyValue{
+		Extended: []model.KeyValue{
 			{Key: "RepoPath", Value: externalRepoPath},
 		},
 	}
@@ -145,11 +103,13 @@ func CreateApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	messages := make(chan Application)
+	log.Infof("application '%s' is being created\n", name)
+	messages := make(chan model.Status)
 	go create(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			log.Errorf("application '%s' creation failed with: %v\n", name, err)
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})

@@ -1,4 +1,4 @@
-FROM gliderlabs/alpine:3.4
+FROM gliderlabs/alpine:3.9
 
 RUN apk update && apk upgrade && \
     apk add --no-cache git

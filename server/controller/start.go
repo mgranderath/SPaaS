@@ -1,29 +1,22 @@
 package controller
 
 import (
+	"github.com/labstack/gommon/log"
+	"github.com/mgranderath/SPaaS/server/model"
 	"net/http"
 
 	"github.com/labstack/echo"
 	"github.com/mgranderath/SPaaS/common"
 )
 
-func start(name string, messages chan<- Application) {
-	messages <- Application{
-		Type:    "info",
-		Message: "Starting application",
-	}
+func start(name string, messages model.StatusChannel) {
+	messages.SendInfo("Starting application")
 	if err := StartContainer(common.SpaasName(name)); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Starting application",
-	}
+	messages.SendSuccess("Starting application")
 	close(messages)
 }
 
@@ -32,11 +25,13 @@ func StartApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	messages := make(chan Application)
+	log.Infof("application '%s' is being started\n", name)
+	messages := make(chan model.Status)
 	go start(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			log.Errorf("application '%s' start failed with: %v\n", name, err)
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})

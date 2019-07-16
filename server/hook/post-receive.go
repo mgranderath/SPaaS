@@ -39,13 +39,13 @@ for line in response:
     output = ''
     if obj['type'] == 'info':
         output += INFO_START + 'INFO:'.ljust(10)
-        output += obj['message'] + END + '\r'
+        output += obj['model'] + END + '\r'
     elif obj['type'] == 'success':
         output += SUCCESS_START + 'SUCCESS:'.ljust(10)
-        output += obj['message'] + END
+        output += obj['model'] + END
     else:
         output += ERROR_START + 'ERROR:'.ljust(10)
-        output += obj['message'] + END
+        output += obj['model'] + END
     print output
 `
 

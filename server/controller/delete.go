@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+	"github.com/labstack/gommon/log"
+	"github.com/mgranderath/SPaaS/server/model"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,51 +12,27 @@ import (
 	"github.com/mgranderath/SPaaS/common"
 )
 
-func delete(name string, messages chan<- Application) {
+func delete(name string, messages model.StatusChannel) {
 	appPath := filepath.Join(basePath, "applications", name)
 	if !common.Exists(appPath) {
-		messages <- Application{
-			Type:    "error",
-			Message: "Does not exist",
-		}
+		messages.SendError(errors.New("Does not exist"))
 		close(messages)
 		return
 	}
 	// Remove directories
-	messages <- Application{
-		Type:    "info",
-		Message: "Removing directories",
-	}
+	messages.SendInfo("Removing directories")
 	if err := os.RemoveAll(appPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Removing directories",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Removing docker container",
-	}
+	messages.SendSuccess("Removing directories")
+	messages.SendInfo("Removing docker container")
 	_ = RemoveContainer(common.SpaasName(name))
-	messages <- Application{
-		Type:    "success",
-		Message: "Removing docker container",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Removing docker image",
-	}
+	messages.SendSuccess("Removing docker container")
+	messages.SendInfo("Removing docker image")
 	_, _ = RemoveImage(common.SpaasName(name))
-	messages <- Application{
-		Type:    "success",
-		Message: "Removing docker image",
-	}
+	messages.SendSuccess("Removing docker image")
 	close(messages)
 }
 
@@ -62,11 +41,13 @@ func DeleteApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	messages := make(chan Application)
+	log.Infof("application '%s' is being deleted\n", name)
+	messages := make(chan model.Status)
 	go delete(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			log.Errorf("application '%s' deletion failed with: %v\n", name, err)
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})

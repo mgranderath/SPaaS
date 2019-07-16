@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bufio"
+	"github.com/mgranderath/SPaaS/server/model"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,19 +14,6 @@ import (
 	"github.com/mgranderath/SPaaS/common"
 )
 
-// Application stores information about the application
-type Application struct {
-	Type     string     `json:"type"`
-	Message  string     `json:"message"`
-	Extended []KeyValue `json:"extended,omitempty"`
-}
-
-// KeyValue holds extra information of a message
-type KeyValue struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
-}
-
 var basePath = filepath.Join(common.HomeDir(), ".spaas")
 
 // GetLogs streams the log of a container
@@ -33,7 +21,7 @@ func GetLogs(c echo.Context) error {
 	name := c.Param("name")
 	resp, err := ContainerLogs(common.SpaasName(name))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
+		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
 			Message: err.Error(),
 		})
@@ -50,11 +38,11 @@ func GetLogs(c echo.Context) error {
 			log.Fatalf("read file line error: %v", err)
 			return err
 		}
-		if err := common.EncodeJSONAndFlush(c, Application{
+		if err := common.EncodeJSONAndFlush(c, model.Status{
 			Type:    "info",
 			Message: line,
 		}); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})
@@ -70,13 +58,13 @@ func GetApplication(c echo.Context) error {
 	name := c.Param("name")
 	container, err := InspectContainer(common.SpaasName(name))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
+		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
 			Message: err.Error(),
 		})
 	}
 	if err := common.EncodeJSONAndFlush(c, container); err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
+		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
 			Message: err.Error(),
 		})
@@ -91,17 +79,17 @@ func GetApplications(c echo.Context) error {
 	appPath := filepath.Join(basePath, "applications")
 	files, err := ioutil.ReadDir(appPath)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Application{
+		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
 			Message: err.Error(),
 		})
 	}
 	for _, f := range files {
-		if err := common.EncodeJSONAndFlush(c, Application{
+		if err := common.EncodeJSONAndFlush(c, model.Status{
 			Type:    "info",
 			Message: f.Name(),
 		}); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})

@@ -4,10 +4,6 @@ server:
 	mkdir -p release
 	CGO_ENABLED=0 go build -o release/SPaaS_server ./server
 
-javascript:
-	mkdir -p release
-	CGO_ENABLED=0 go build -o release/javascript ./buildpacks/javascript
-
 server_linux:
 	mkdir -p release
 	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o release/SPaaS_server ./server

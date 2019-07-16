@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/mgranderath/SPaaS/server/model"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,7 +36,7 @@ func testRemoveImage(name string, t *testing.T) {
 }
 
 func TestItCreatesNewApp(t *testing.T) {
-	messages := make(chan Application)
+	messages := make(chan model.Status)
 	name := "test"
 	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
 	config.Cfg.Config.Set("HOST_CONFIG_FOLDER", filepath.Join(common.HomeDir(), ".spaas"))

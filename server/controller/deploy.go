@@ -1,6 +1,12 @@
 package controller
 
 import (
+	"github.com/labstack/gommon/log"
+	buildpacknodejs "github.com/mgranderath/SPaaS/buildpack/nodejs"
+	buildpackpython "github.com/mgranderath/SPaaS/buildpack/python"
+	buildpackruby "github.com/mgranderath/SPaaS/buildpack/ruby"
+	"github.com/mgranderath/SPaaS/server/model"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -14,189 +20,137 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mgranderath/SPaaS/common"
 	"github.com/mgranderath/SPaaS/config"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
-func deploy(name string, messages chan<- Application) {
+func deploy(name string, messages model.StatusChannel) {
 	var (
-		appType string
+		appType model.ApplicationType
 	)
 	appPath := filepath.Join(basePath, "applications", name)
 	deployPath := filepath.Join(appPath, "deploy")
 	repoPath := filepath.Join(appPath, "repo")
 	if !common.Exists(appPath) {
-		messages <- Application{
-			Type:    "error",
-			Message: "Does not exist",
-		}
+		messages.SendError(errors.New("Does not exist"))
 		close(messages)
 		return
 	}
-	// Creating directory
-	messages <- Application{
-		Type:    "info",
-		Message: "Creating directories",
-	}
+	messages.SendInfo("Creating directories")
 	if err := os.RemoveAll(deployPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	err := os.MkdirAll(deployPath, os.ModePerm)
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Creating directories",
-	}
+	messages.SendSuccess("Creating directories")
 	// Clone repository
-	messages <- Application{
-		Type:    "info",
-		Message: "Cloning repo",
-	}
+	messages.SendInfo("Cloning repository")
 	_, err = git.PlainClone(deployPath, false, &git.CloneOptions{
 		URL: repoPath,
 	})
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Cloning repo",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Detecting run command",
-	}
+	messages.SendSuccess("Cloning repository")
+	messages.SendInfo("Detecting run command")
 	dockerfile := config.Dockerfile{}
 	v, err := config.ReadConfig(filepath.Join(deployPath, "spaas.json"), map[string]interface{}{})
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	if !v.InConfig("start") {
-		messages <- Application{
-			Type:    "error",
-			Message: "No start in spaas.json in project",
-		}
+		messages.SendError(errors.New("No 'start' in spaas.json in project"))
 		close(messages)
 		return
 	}
 	dockerfile.Command = strings.Fields(v.GetString("start"))
-	messages <- Application{
+	messages <- model.Status{
 		Type:    "success",
 		Message: "Detecting run command",
-		Extended: []KeyValue{
+		Extended: []model.KeyValue{
 			{Key: "Cmd", Value: v.GetString("start")},
 		},
 	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Detecting app type",
-	}
+	messages.SendInfo("Detecting app type")
 	if common.Exists(filepath.Join(deployPath, "requirements.txt")) {
-		appType = "python"
+		appType = model.Python
 	} else if common.Exists(filepath.Join(deployPath, "package.json")) {
-		appType = "nodejs"
+		appType = model.Node
 	} else if common.Exists(filepath.Join(deployPath, "Gemfile")) {
-		appType = "ruby"
+		appType = model.Ruby
 	} else {
-		messages <- Application{
-			Type:    "error",
-			Message: "Could not detect type of application",
-		}
+		messages.SendError(errors.New("Could not detect type of application"))
 		close(messages)
 		return
 	}
-	messages <- Application{
+	messages <- model.Status{
 		Type:    "success",
 		Message: "Detecting app type",
-		Extended: []KeyValue{
-			{Key: "Type", Value: appType},
+		Extended: []model.KeyValue{
+			{Key: "Type", Value: appType.ToString()},
 		},
 	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Packaging app",
-	}
+	messages.SendInfo("Packaging application")
 	dockerfileConfig := config.Dockerfile{
-		Command:        dockerfile.Command,
-		VersionDefined: false,
+		Command: dockerfile.Command,
 	}
-	if err := config.CreateDockerfile(appType, dockerfileConfig, appPath); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
+
+	switch appType {
+	case model.Python:
+		if err := buildpackpython.Build(appPath, dockerfileConfig); err != nil {
+			messages.SendError(err)
+			close(messages)
+			return
 		}
-		close(messages)
-		return
+	case model.Node:
+		if err := buildpacknodejs.Build(appPath, dockerfileConfig); err != nil {
+			messages.SendError(err)
+			close(messages)
+			return
+		}
+	case model.Ruby:
+		if err := buildpackruby.Build(appPath, dockerfileConfig); err != nil {
+			messages.SendError(err)
+			close(messages)
+			return
+		}
 	}
 	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
 	cmd.Dir = deployPath + "/"
 	_, err = cmd.Output()
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Packaging app",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Building image",
-	}
+	messages.SendSuccess("Packaging application")
+	messages.SendInfo("Building image")
 	f, err := os.Open(filepath.Join(appPath, "package.tar"))
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	defer f.Close()
 	response, err := BuildImage(f, common.SpaasName(name))
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
 	defer response.Body.Close()
 	_, err = ioutil.ReadAll(response.Body)
-	messages <- Application{
-		Type:    "success",
-		Message: "Building image",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Building container",
-	}
+	messages.SendSuccess("Building image")
+	messages.SendInfo("Building container")
 	_ = RemoveContainer(common.SpaasName(name))
 	labels := map[string]string{
 		"traefik.backend": common.SpaasName(name),
@@ -214,36 +168,22 @@ func deploy(name string, messages chan<- Application) {
 			ExposedPorts: nat.PortSet{
 				"80/tcp": struct{}{},
 			},
+			Env:    []string{"PORT=80"},
 			Labels: labels,
 		}, container.HostConfig{}, network.NetworkingConfig{}, common.SpaasName(name))
 	if err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Building container",
-	}
-	messages <- Application{
-		Type:    "info",
-		Message: "Starting container",
-	}
+	messages.SendSuccess("Building container")
+	messages.SendInfo("Starting container")
 	if err := StartContainer(common.SpaasName(name)); err != nil {
-		messages <- Application{
-			Type:    "error",
-			Message: err.Error(),
-		}
+		messages.SendError(err)
 		close(messages)
 		return
 	}
-	messages <- Application{
-		Type:    "success",
-		Message: "Starting container",
-	}
+	messages.SendSuccess("Starting container")
 	close(messages)
 }
 
@@ -252,11 +192,13 @@ func DeployApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	messages := make(chan Application)
+	log.Infof("application '%s' is being deployed\n", name)
+	messages := make(chan model.Status)
 	go deploy(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			return c.JSON(http.StatusInternalServerError, Application{
+			log.Errorf("application '%s' deployment failed with: %v\n", name, err)
+			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),
 			})
