@@ -1,7 +1,6 @@
 package buildpack_python
 
 import (
-	"github.com/mgranderath/SPaaS/config"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -28,7 +27,7 @@ type options struct {
 	Length  int
 }
 
-func Build(appPath string, dockerfile config.Dockerfile) error {
+func Build(appPath string, command []string) error {
 	var (
 		t   *template.Template
 		err error
@@ -39,8 +38,8 @@ func Build(appPath string, dockerfile config.Dockerfile) error {
 		return err
 	}
 	options := options{
-		Command: dockerfile.Command,
-		Length:  len(dockerfile.Command) - 1,
+		Command: command,
+		Length:  len(command) - 1,
 	}
 	f, err := os.Create(filepath.Join(appPath, "deploy", "Dockerfile"))
 	if err != nil {

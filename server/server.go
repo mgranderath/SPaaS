@@ -1,8 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/mgranderath/SPaaS/server/model"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo"
@@ -28,7 +32,23 @@ func initialize(e *echo.Echo) {
 }
 
 func main() {
+	deploy := flag.Bool("deploy", false, "call this to deploy app")
+	flag.Parse()
 	e := echo.New()
 	initialize(e)
+	if *deploy {
+		// this is for the post-receive hook
+		if len(flag.Args()) != 1 {
+			fmt.Println("no args passed")
+			os.Exit(1)
+		}
+		appName := flag.Args()[0]
+		messages := make(chan model.Status)
+		go controller.Deploy(appName, messages)
+		for elem := range messages {
+			fmt.Println(strings.ToUpper(elem.Type) + ": " + elem.Message)
+		}
+		return
+	}
 	e.Logger.Fatal(e.Start(":8080"))
 }

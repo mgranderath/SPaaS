@@ -3,7 +3,7 @@ package model
 // Status stores information about the application
 type Status struct {
 	Type     string     `json:"type"`
-	Message  string     `json:"model"`
+	Message  string     `json:"message"`
 	Extended []KeyValue `json:"extended,omitempty"`
 }
 

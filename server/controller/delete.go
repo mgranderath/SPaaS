@@ -2,26 +2,24 @@ package controller
 
 import (
 	"errors"
+	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
+	"github.com/mgranderath/SPaaS/common"
 	"github.com/mgranderath/SPaaS/server/model"
 	"net/http"
 	"os"
-	"path/filepath"
-
-	"github.com/labstack/echo"
-	"github.com/mgranderath/SPaaS/common"
 )
 
 func delete(name string, messages model.StatusChannel) {
-	appPath := filepath.Join(basePath, "applications", name)
-	if !common.Exists(appPath) {
+	app := model.NewApplication(name)
+	if !common.Exists(app.Path) {
 		messages.SendError(errors.New("Does not exist"))
 		close(messages)
 		return
 	}
 	// Remove directories
 	messages.SendInfo("Removing directories")
-	if err := os.RemoveAll(appPath); err != nil {
+	if err := os.RemoveAll(app.Path); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return

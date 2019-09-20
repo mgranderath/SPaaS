@@ -1,48 +1,32 @@
 package controller
 
 import (
+	"docker.io/go-docker/api/types/container"
+	"docker.io/go-docker/api/types/network"
+	"github.com/docker/go-connections/nat"
+	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
-	buildpacknodejs "github.com/mgranderath/SPaaS/buildpack/nodejs"
-	buildpackpython "github.com/mgranderath/SPaaS/buildpack/python"
-	buildpackruby "github.com/mgranderath/SPaaS/buildpack/ruby"
+	"github.com/mgranderath/SPaaS/common"
+	"github.com/mgranderath/SPaaS/config"
 	"github.com/mgranderath/SPaaS/server/model"
 	"github.com/pkg/errors"
+	"gopkg.in/src-d/go-git.v4"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
-
-	"docker.io/go-docker/api/types/container"
-	"docker.io/go-docker/api/types/network"
-	"github.com/docker/go-connections/nat"
-	"github.com/labstack/echo"
-	"github.com/mgranderath/SPaaS/common"
-	"github.com/mgranderath/SPaaS/config"
-	"gopkg.in/src-d/go-git.v4"
 )
 
-func deploy(name string, messages model.StatusChannel) {
-	var (
-		appType model.ApplicationType
-	)
-	appPath := filepath.Join(basePath, "applications", name)
-	deployPath := filepath.Join(appPath, "deploy")
-	repoPath := filepath.Join(appPath, "repo")
-	if !common.Exists(appPath) {
+func Deploy(name string, messages model.StatusChannel) {
+	app := model.NewApplication(name)
+	if !app.Exists() {
 		messages.SendError(errors.New("Does not exist"))
 		close(messages)
 		return
 	}
 	messages.SendInfo("Creating directories")
-	if err := os.RemoveAll(deployPath); err != nil {
-		messages.SendError(err)
-		close(messages)
-		return
-	}
-	err := os.MkdirAll(deployPath, os.ModePerm)
-	if err != nil {
+	if err := app.ResetDeployDir(); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
@@ -50,8 +34,8 @@ func deploy(name string, messages model.StatusChannel) {
 	messages.SendSuccess("Creating directories")
 	// Clone repository
 	messages.SendInfo("Cloning repository")
-	_, err = git.PlainClone(deployPath, false, &git.CloneOptions{
-		URL: repoPath,
+	_, err := git.PlainClone(app.DeployPath, false, &git.CloneOptions{
+		URL: app.RepositoryPath,
 	})
 	if err != nil {
 		messages.SendError(err)
@@ -60,34 +44,20 @@ func deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Cloning repository")
 	messages.SendInfo("Detecting run command")
-	dockerfile := config.Dockerfile{}
-	v, err := config.ReadConfig(filepath.Join(deployPath, "spaas.json"), map[string]interface{}{})
-	if err != nil {
+	if err := app.DetectStartCommand(); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
 	}
-	if !v.InConfig("start") {
-		messages.SendError(errors.New("No 'start' in spaas.json in project"))
-		close(messages)
-		return
-	}
-	dockerfile.Command = strings.Fields(v.GetString("start"))
 	messages <- model.Status{
 		Type:    "success",
 		Message: "Detecting run command",
 		Extended: []model.KeyValue{
-			{Key: "Cmd", Value: v.GetString("start")},
+			{Key: "Cmd", Value: app.Command},
 		},
 	}
 	messages.SendInfo("Detecting app type")
-	if common.Exists(filepath.Join(deployPath, "requirements.txt")) {
-		appType = model.Python
-	} else if common.Exists(filepath.Join(deployPath, "package.json")) {
-		appType = model.Node
-	} else if common.Exists(filepath.Join(deployPath, "Gemfile")) {
-		appType = model.Ruby
-	} else {
+	if app.DetectType() == model.Undefined {
 		messages.SendError(errors.New("Could not detect type of application"))
 		close(messages)
 		return
@@ -96,36 +66,19 @@ func deploy(name string, messages model.StatusChannel) {
 		Type:    "success",
 		Message: "Detecting app type",
 		Extended: []model.KeyValue{
-			{Key: "Type", Value: appType.ToString()},
+			{Key: "Type", Value: app.Type.ToString()},
 		},
 	}
 	messages.SendInfo("Packaging application")
-	dockerfileConfig := config.Dockerfile{
-		Command: dockerfile.Command,
+
+	if err := app.Build(); err != nil {
+		messages.SendError(err)
+		close(messages)
+		return
 	}
 
-	switch appType {
-	case model.Python:
-		if err := buildpackpython.Build(appPath, dockerfileConfig); err != nil {
-			messages.SendError(err)
-			close(messages)
-			return
-		}
-	case model.Node:
-		if err := buildpacknodejs.Build(appPath, dockerfileConfig); err != nil {
-			messages.SendError(err)
-			close(messages)
-			return
-		}
-	case model.Ruby:
-		if err := buildpackruby.Build(appPath, dockerfileConfig); err != nil {
-			messages.SendError(err)
-			close(messages)
-			return
-		}
-	}
 	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
-	cmd.Dir = deployPath + "/"
+	cmd.Dir = app.DeployPath + "/"
 	_, err = cmd.Output()
 	if err != nil {
 		messages.SendError(err)
@@ -134,7 +87,7 @@ func deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Packaging application")
 	messages.SendInfo("Building image")
-	f, err := os.Open(filepath.Join(appPath, "package.tar"))
+	f, err := os.Open(filepath.Join(app.Path, "package.tar"))
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -194,7 +147,7 @@ func DeployApplication(c echo.Context) error {
 	name := c.Param("name")
 	log.Infof("application '%s' is being deployed\n", name)
 	messages := make(chan model.Status)
-	go deploy(name, messages)
+	go Deploy(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			log.Errorf("application '%s' deployment failed with: %v\n", name, err)

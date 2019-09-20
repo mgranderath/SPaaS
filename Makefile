@@ -8,6 +8,10 @@ server_linux:
 	mkdir -p release
 	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o release/SPaaS_server ./server
 
+post_receive_linux:
+	mkdir -p release
+	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o release/post-receive ./post-receive
+
 frontend:
 	npm run build --prefix ./frontend
 

@@ -12,41 +12,8 @@ type templateData struct {
 	HTTPS          string
 }
 
-const postReceiveHook = `#!/usr/bin/env python
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-import json
-import urllib2
-import urllib
-import socket, ssl
-socket._fileobject.default_bufsize = 0
-
-INFO_START = "\33[33m"
-SUCCESS_START = "\33[32m"
-ERROR_START = "\33[91m"
-END = "\033[0m"
-
-url = '{{ .HTTPS }}{{ .CustomEndpoint }}/api/app/{{ .Name }}/deploy'
-headers = {'Authorization': 'Bearer {{ .Token }}'}
-values = {}
-data = urllib.urlencode(values)
-req = urllib2.Request(url, data, headers=headers)
-response = urllib2.urlopen(req)
-for line in response:
-    if line == '\n':
-        pass
-    obj = json.loads(line)
-    output = ''
-    if obj['type'] == 'info':
-        output += INFO_START + 'INFO:'.ljust(10)
-        output += obj['model'] + END + '\r'
-    elif obj['type'] == 'success':
-        output += SUCCESS_START + 'SUCCESS:'.ljust(10)
-        output += obj['model'] + END
-    else:
-        output += ERROR_START + 'ERROR:'.ljust(10)
-        output += obj['model'] + END
-    print output
+const postReceiveHook = `#!/usr/bin/env bash
+ls .
 `
 
 // CreatePostReceive returns the code for the post-receive hook

@@ -1,7 +1,6 @@
 package buildpack_nodejs
 
 import (
-	"github.com/mgranderath/SPaaS/config"
 	"html/template"
 	"os"
 	"path"
@@ -31,7 +30,7 @@ type options struct {
 	Yarn    bool
 }
 
-func Build(appPath string, dockerfile config.Dockerfile) error {
+func Build(appPath string, command []string) error {
 	var (
 		t   *template.Template
 		err error
@@ -42,8 +41,8 @@ func Build(appPath string, dockerfile config.Dockerfile) error {
 		return err
 	}
 	options := options{
-		Command: dockerfile.Command,
-		Length:  len(dockerfile.Command) - 1,
+		Command: command,
+		Length:  command - 1,
 	}
 	if _, err := os.Stat(path.Join(appPath, "yarn.lock")); err == nil {
 		options.Yarn = true

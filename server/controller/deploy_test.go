@@ -32,7 +32,7 @@ func TestItDeploysApp(t *testing.T) {
 		testRemoveApp(appPath, t)
 		t.Fatal(err.Error())
 	}
-	go deploy(name, messages)
+	go Deploy(name, messages)
 	for elem := range messages {
 		if elem.Type == "error" {
 			testRemoveApp(appPath, t)

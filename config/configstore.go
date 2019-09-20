@@ -26,7 +26,7 @@ func New(FilePath string, FileName string) {
 		FilePath: FilePath,
 		FileName: FileName,
 	}
-	os.OpenFile(FilePath+"/"+FileName, os.O_RDONLY|os.O_CREATE, 0666)
+	_, _ = os.OpenFile(FilePath+"/"+FileName, os.O_RDONLY|os.O_CREATE, 0666)
 	err := os.MkdirAll(filepath.Join(common.HomeDir(), ".spaas", "acme"), os.ModePerm)
 	if err != nil {
 		log.Fatalln("Could not create acme folder")

@@ -17,18 +17,17 @@ import (
 )
 
 func create(name string, messages model.StatusChannel) {
-	appPath := filepath.Join(basePath, "applications", name)
-	repoPath := filepath.Join(appPath, "repo")
+	app := model.NewApplication(name)
 	externalRepoPath := filepath.Join(config.Cfg.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
 	// Check if app already exists
-	if common.Exists(appPath) {
+	if app.Exists() {
 		messages.SendError(errors.New("Already exists"))
 		close(messages)
 		return
 	}
 	// Create Directories
 	messages.SendInfo("Creating directories")
-	err := os.MkdirAll(repoPath, os.ModePerm)
+	err := os.MkdirAll(app.RepositoryPath, os.ModePerm)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -37,7 +36,7 @@ func create(name string, messages model.StatusChannel) {
 	messages.SendSuccess("Creating directories")
 	// Initialize the git repository
 	messages.SendInfo("Creating repository")
-	if _, err := git.PlainInit(repoPath, true); err != nil {
+	if _, err := git.PlainInit(app.RepositoryPath, true); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
@@ -45,13 +44,13 @@ func create(name string, messages model.StatusChannel) {
 	messages.SendSuccess("Creating repository")
 	// Create git post-receive hook
 	messages.SendInfo("Creating receive hook")
-	err = os.MkdirAll(filepath.Join(repoPath, "hooks"), os.ModePerm)
+	err = os.MkdirAll(filepath.Join(app.RepositoryPath, "hooks"), os.ModePerm)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
 	}
-	file, err := os.Create(filepath.Join(repoPath, "hooks", "post-receive"))
+	file, err := os.Create(filepath.Join(app.RepositoryPath, "hooks", "post-receive"))
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -81,7 +80,7 @@ func create(name string, messages model.StatusChannel) {
 		return
 	}
 	// Make the hook executable
-	err = os.Chmod(filepath.Join(repoPath, "hooks", "post-receive"), 0755)
+	err = os.Chmod(filepath.Join(app.RepositoryPath, "hooks", "post-receive"), 0755)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
