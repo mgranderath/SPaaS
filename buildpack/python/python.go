@@ -6,17 +6,11 @@ import (
 	"path/filepath"
 )
 
-//RUN python3 -m ensurepip && \
-//pip3 install --no-cache --upgrade pip3 setuptools wheel && \
-//if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
-
 const dockerfileTemplate = `FROM gliderlabs/alpine:3.9
 WORKDIR /usr/src/app
 
 RUN apk add --no-cache python3 && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi
-
-
 
 EXPOSE 5000:5000
 COPY . . 

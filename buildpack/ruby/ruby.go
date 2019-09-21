@@ -6,48 +6,16 @@ import (
 	"path/filepath"
 )
 
-const dockerfileTemplate = `FROM gliderlabs/alpine:3.9
-
-ENV NOKOGIRI_USE_SYSTEM_LIBRARIES=1
-
-RUN apk update \
-\
-&& apk add ruby \
-           ruby-bigdecimal \
-           ruby-bundler \
-           ruby-io-console \
-           ruby-irb \
-           build-base \
-            ruby-dev \
- && apk add --update-cache --repository http://dl-4.alpinelinux.org/alpine/edge/main/ \
-            ca-certificates \
-            libressl \
-            libressl-dev \
- \
- && bundle config build.nokogiri --use-system-libraries \
- && bundle config git.allow_insecure true \
- && gem install --no-rdoc --no-ri \
-                json \
-                foreman \
- \
- && gem cleanup \
- && apk del build-base \
-            ruby-dev \
-            libressl-dev \
- && rm -rf /usr/lib/ruby/gems/*/cache/* \
-           /var/cache/apk/* \
-           /tmp/*
- 
-RUN apk --no-cache add --virtual build-dependencies ruby-dev build-base \
-  libxml2-dev libxslt-dev pcre-dev libffi-dev \
-  mariadb-dev postgresql-dev
+const dockerfileTemplate = `FROM andrius/alpine-ruby:3.4
 
 WORKDIR /usr/src/app
 
+RUN apk add --no-cache --update ruby-dev build-base \
+  libxml2-dev libxslt-dev pcre-dev libffi-dev \
+  mariadb-dev postgresql-dev
+
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
-
-RUN apk del build-dependencies
 
 EXPOSE 5000:5000
 COPY . . 
