@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const dockerfileTemplate = `FROM gliderlabs/alpine:3.9
+const dockerfileTemplate = `FROM gliderlabs/alpine:3.4
 WORKDIR /usr/src/app
 RUN apk add --no-cache nodejs
 {{ if .Yarn }}
@@ -42,7 +42,7 @@ func Build(appPath string, command []string) error {
 	}
 	options := options{
 		Command: command,
-		Length:  command - 1,
+		Length:  len(command) - 1,
 	}
 	if _, err := os.Stat(path.Join(appPath, "yarn.lock")); err == nil {
 		options.Yarn = true

@@ -123,6 +123,7 @@ func Deploy(name string, messages model.StatusChannel) {
 			},
 			Env:    []string{"PORT=80"},
 			Labels: labels,
+			Tty:    true,
 		}, container.HostConfig{}, network.NetworkingConfig{}, common.SpaasName(name))
 	if err != nil {
 		messages.SendError(err)
@@ -145,12 +146,12 @@ func DeployApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	log.Infof("application '%s' is being deployed\n", name)
+	log.Infof("application '%s' is being deployed", name)
 	messages := make(chan model.Status)
 	go Deploy(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			log.Errorf("application '%s' deployment failed with: %v\n", name, err)
+			log.Errorf("application '%s' deployment failed with: %v", name, err)
 			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),

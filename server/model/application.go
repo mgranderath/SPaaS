@@ -33,12 +33,12 @@ var TypeToBuild = map[ApplicationType]func(string, []string) error{
 	Ruby:   buildpackruby.Build,
 }
 
-func NewApplication(name string) Application {
+func NewApplication(name string) *Application {
 	basePath := filepath.Join(common.HomeDir(), ".spaas")
 	Path := filepath.Join(basePath, "applications", name)
 	DeployPath := filepath.Join(Path, "deploy")
 	RepositoryPath := filepath.Join(Path, "repo")
-	return Application{
+	return &Application{
 		Name:           name,
 		Path:           Path,
 		DeployPath:     DeployPath,
@@ -48,20 +48,21 @@ func NewApplication(name string) Application {
 	}
 }
 
-func (app Application) Exists() bool {
+func (app *Application) Exists() bool {
 	return common.Exists(app.Path)
 }
 
-func (app Application) DetectType() ApplicationType {
+func (app *Application) DetectType() ApplicationType {
 	for appType, file := range TypeToFile {
 		if common.Exists(filepath.Join(app.DeployPath, file)) {
 			app.Type = appType
+			return appType
 		}
 	}
 	return app.Type
 }
 
-func (app Application) Build() error {
+func (app *Application) Build() error {
 	if app.Type == Undefined {
 		return errors.New("undefined application type")
 	}
@@ -75,7 +76,7 @@ func (app Application) Build() error {
 	return nil
 }
 
-func (app Application) ResetDeployDir() error {
+func (app *Application) ResetDeployDir() error {
 	if err := os.RemoveAll(app.DeployPath); err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func (app Application) ResetDeployDir() error {
 	return nil
 }
 
-func (app Application) DetectStartCommand() error {
+func (app *Application) DetectStartCommand() error {
 	v, err := config.ReadConfig(filepath.Join(app.DeployPath, "spaas.json"), map[string]interface{}{})
 	if err != nil {
 		return err

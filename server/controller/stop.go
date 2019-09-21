@@ -25,12 +25,12 @@ func StopApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	log.Infof("application '%s' is being stopped\n", name)
+	log.Infof("application '%s' is being stopped", name)
 	messages := make(chan model.Status)
 	go stop(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
-			log.Errorf("application '%s' stop failed with: %v\n", name, err)
+			log.Errorf("application '%s' stop failed with: %v", name, err)
 			return c.JSON(http.StatusInternalServerError, model.Status{
 				Type:    "error",
 				Message: err.Error(),

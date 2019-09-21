@@ -10,6 +10,7 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
+	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.3.0
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/emirpasic/gods v1.9.0 // indirect

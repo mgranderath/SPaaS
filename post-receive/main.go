@@ -4,8 +4,8 @@ import (
 	"context"
 	client "docker.io/go-docker"
 	"docker.io/go-docker/api/types"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/labstack/gommon/log"
-	"io"
 	"os"
 )
 
@@ -19,6 +19,7 @@ func main() {
 	response, err := docker.ContainerExecCreate(context.Background(), "spaas", types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
+		Tty:          true,
 		Cmd:          []string{"/app/SPaaS_server", "-deploy", applicationName},
 	})
 	if err != nil {
@@ -32,7 +33,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer hijackedResponse.Close()
-	_, err = io.Copy(os.Stdout, hijackedResponse.Reader)
+	// Using stdcopy because container without a tty prepend output with an extra byte
+	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, hijackedResponse.Reader)
 	if err != nil {
 		log.Panic(err)
 		os.Exit(1)

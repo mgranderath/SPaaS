@@ -79,8 +79,20 @@ func create(name string, messages model.StatusChannel) {
 		close(messages)
 		return
 	}
+	written, err := common.Copy("./util/post-receive", filepath.Join(app.RepositoryPath, "hooks", "post-receive-deploy"))
+	if err != nil || written == 0 {
+		messages.SendError(err)
+		close(messages)
+		return
+	}
 	// Make the hook executable
 	err = os.Chmod(filepath.Join(app.RepositoryPath, "hooks", "post-receive"), 0755)
+	if err != nil {
+		messages.SendError(err)
+		close(messages)
+		return
+	}
+	err = os.Chmod(filepath.Join(app.RepositoryPath, "hooks", "post-receive-deploy"), 0755)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)

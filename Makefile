@@ -18,8 +18,8 @@ frontend:
 frontend_deps:
 	cd frontend; npm install
 
-release_dev:
-	docker build -t mgranderath/spaas:dev .
+release_dev: server_linux post_receive_linux frontend
+	docker build -t mgranderath/spaas:dev . && docker push mgranderath/spaas:dev
 
 release:
 	docker build -t mgranderath/spaas .
