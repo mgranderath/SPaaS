@@ -3,6 +3,7 @@ package controller
 import (
 	"docker.io/go-docker/api/types/container"
 	"docker.io/go-docker/api/types/network"
+	"fmt"
 	"github.com/docker/go-connections/nat"
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
@@ -17,6 +18,62 @@ import (
 	"os/exec"
 	"path/filepath"
 )
+
+func packageApplication(app *model.Application) error {
+	if err := app.Build(); err != nil {
+		return err
+	}
+	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
+	cmd.Dir = app.DeployPath + "/"
+	_, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func buildImage(app *model.Application) error {
+	f, err := os.Open(filepath.Join(app.Path, "package.tar"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	response, err := BuildImage(f, common.SpaasName(app.Name))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	_, err = ioutil.ReadAll(response.Body)
+	return nil
+}
+
+func buildContainer(app *model.Application) error {
+	name := app.Name
+	_ = RemoveContainer(common.SpaasName(name))
+	labels := map[string]string{
+		"traefik.backend": common.SpaasName(name),
+		"traefik.enable":  "true",
+		"traefik.port":    "80",
+	}
+	if config.Cfg.Config.GetBool("useDomain") {
+		labels["traefik.frontend.rule"] =
+			fmt.Sprintf("Host:%s.%s", name, config.Cfg.Config.GetString("domain"))
+	} else {
+		labels["traefik.frontend.rule"] =
+			fmt.Sprintf("PathPrefixStrip:/spaas/%s", name)
+	}
+	_, err := CreateContainer(
+		container.Config{
+			Image: common.SpaasName(name) + ":latest",
+			ExposedPorts: nat.PortSet{
+				"80/tcp": struct{}{},
+			},
+			Env:    []string{"PORT=80"},
+			Labels: labels,
+			Tty:    true,
+		}, container.HostConfig{}, network.NetworkingConfig{}, common.SpaasName(name))
+	return err
+}
 
 func Deploy(name string, messages model.StatusChannel) {
 	app := model.NewApplication(name)
@@ -52,9 +109,6 @@ func Deploy(name string, messages model.StatusChannel) {
 	messages <- model.Status{
 		Type:    "success",
 		Message: "Detecting run command",
-		Extended: []model.KeyValue{
-			{Key: "Cmd", Value: app.Command},
-		},
 	}
 	messages.SendInfo("Detecting app type")
 	if app.DetectType() == model.Undefined {
@@ -65,21 +119,9 @@ func Deploy(name string, messages model.StatusChannel) {
 	messages <- model.Status{
 		Type:    "success",
 		Message: "Detecting app type",
-		Extended: []model.KeyValue{
-			{Key: "Type", Value: app.Type.ToString()},
-		},
 	}
 	messages.SendInfo("Packaging application")
-
-	if err := app.Build(); err != nil {
-		messages.SendError(err)
-		close(messages)
-		return
-	}
-
-	cmd := exec.Command("tar", "cvf", "../package.tar", ".")
-	cmd.Dir = app.DeployPath + "/"
-	_, err = cmd.Output()
+	err = packageApplication(app)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -87,44 +129,15 @@ func Deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Packaging application")
 	messages.SendInfo("Building image")
-	f, err := os.Open(filepath.Join(app.Path, "package.tar"))
+	err = buildImage(app)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
 	}
-	defer f.Close()
-	response, err := BuildImage(f, common.SpaasName(name))
-	if err != nil {
-		messages.SendError(err)
-		close(messages)
-		return
-	}
-	defer response.Body.Close()
-	_, err = ioutil.ReadAll(response.Body)
 	messages.SendSuccess("Building image")
 	messages.SendInfo("Building container")
-	_ = RemoveContainer(common.SpaasName(name))
-	labels := map[string]string{
-		"traefik.backend": common.SpaasName(name),
-		"traefik.enable":  "true",
-		"traefik.port":    "80",
-	}
-	if config.Cfg.Config.GetBool("useDomain") {
-		labels["traefik.frontend.rule"] = "Host:" + name + "." + config.Cfg.Config.GetString("domain")
-	} else {
-		labels["traefik.frontend.rule"] = "PathPrefixStrip:/spaas/" + name
-	}
-	_, err = CreateContainer(
-		container.Config{
-			Image: common.SpaasName(name) + ":latest",
-			ExposedPorts: nat.PortSet{
-				"80/tcp": struct{}{},
-			},
-			Env:    []string{"PORT=80"},
-			Labels: labels,
-			Tty:    true,
-		}, container.HostConfig{}, network.NetworkingConfig{}, common.SpaasName(name))
+	err = buildContainer(app)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)

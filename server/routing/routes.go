@@ -13,12 +13,13 @@ func SetupRoutes(e *echo.Echo) {
 	e.POST("/login", auth.Login)
 	e.File("/", "static/index.html")
 
+	secret := []byte(config.Cfg.Config.GetString("secret"))
 	g := e.Group("")
-	g.Use(middleware.JWT([]byte(config.Cfg.Config.GetString("secret"))))
+	g.Use(middleware.JWT(secret))
 	g.POST("/change-password", auth.ChangePassword)
 
 	r := e.Group("/api/app")
-	r.Use(middleware.JWT([]byte(config.Cfg.Config.GetString("secret"))))
+	r.Use(middleware.JWT(secret))
 	r.GET("", controller.GetApplications)
 	r.GET("/:name", controller.GetApplication)
 	r.POST("/:name", controller.CreateApplication)

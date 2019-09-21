@@ -7,18 +7,15 @@ import (
 )
 
 type templateData struct {
-	Name           string
-	Token          string
-	CustomEndpoint string
-	HTTPS          string
+	Name string
 }
 
 const postReceiveHook = `#!/usr/bin/env bash
 ./hooks/post-receive-deploy {{ .Name }}
 `
 
-// CreatePostReceive returns the code for the post-receive hook
-func CreatePostReceive(name string, token string, endpoint string, HTTPS string) (string, error) {
+// GetPostReceiveHookHelperString returns the code for the post-receive hook
+func GetPostReceiveHookHelperString(name string) (string, error) {
 	t := template.New("Post Receive Hook")
 	t, err := t.Parse(postReceiveHook)
 	if err != nil {
@@ -26,9 +23,6 @@ func CreatePostReceive(name string, token string, endpoint string, HTTPS string)
 	}
 	data := templateData{}
 	data.Name = name
-	data.Token = token
-	data.CustomEndpoint = endpoint
-	data.HTTPS = HTTPS
 	fmt.Println(data.Name)
 	var tpl bytes.Buffer
 	err = t.Execute(&tpl, data)
