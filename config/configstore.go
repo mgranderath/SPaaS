@@ -20,6 +20,17 @@ type Store struct {
 // Cfg points to the current config
 var Cfg *Store
 
+var defaultConfig = map[string]interface{}{
+	"secret":            common.RandStringBytes(15),
+	"username":          "spaas",
+	"password":          common.HashPassword("smallpaas"),
+	"letsencrypt":       false,
+	"letesencryptEmail": "example@example.com",
+	"acmePath":          filepath.Join(common.HomeDir(), ".spaas-server", "acme"),
+	"domain":            "example.com",
+	"useDomain":         false,
+}
+
 // New creates a new store
 func New(FilePath string, FileName string) {
 	Cfg = &Store{
@@ -35,17 +46,7 @@ func New(FilePath string, FileName string) {
 	if err != nil {
 		log.Fatalln("Could not create applications folder")
 	}
-	defaultPassword, _ := common.HashPassword("smallpaas")
-	config, err := ReadConfig(FilePath+"/"+FileName, map[string]interface{}{
-		"secret":            common.RandStringBytes(15),
-		"username":          "spaas",
-		"password":          defaultPassword,
-		"letsencrypt":       false,
-		"letesencryptEmail": "example@example.com",
-		"acmePath":          filepath.Join(common.HomeDir(), ".spaas-server", "acme"),
-		"domain":            "example.com",
-		"useDomain":         false,
-	})
+	config, err := ReadConfig(FilePath+"/"+FileName, defaultConfig)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

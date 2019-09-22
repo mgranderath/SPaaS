@@ -10,12 +10,14 @@ const dockerfileTemplate = `FROM andrius/alpine-ruby:3.4
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache --update ruby-dev build-base \
+RUN apk add --no-cache --virtual .build-deps ruby-dev build-base \
   libxml2-dev libxslt-dev pcre-dev libffi-dev \
   mariadb-dev postgresql-dev
 
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
+
+RUN apk del .build-deps
 
 EXPOSE 5000:5000
 COPY . . 
