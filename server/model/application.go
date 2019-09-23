@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	buildpackdocker "github.com/mgranderath/SPaaS/buildpack/docker"
 	buildpacknodejs "github.com/mgranderath/SPaaS/buildpack/nodejs"
 	buildpackpython "github.com/mgranderath/SPaaS/buildpack/python"
 	buildpackruby "github.com/mgranderath/SPaaS/buildpack/ruby"
@@ -25,12 +26,14 @@ var TypeToFile = map[ApplicationType]string{
 	Python: "requirements.txt",
 	Node:   "package.json",
 	Ruby:   "Gemfile",
+	Docker: "Dockerfile",
 }
 
 var TypeToBuild = map[ApplicationType]func(string, []string) error{
 	Python: buildpackpython.Build,
 	Node:   buildpacknodejs.Build,
 	Ruby:   buildpackruby.Build,
+	Docker: buildpackdocker.Build,
 }
 
 func NewApplication(name string) *Application {
