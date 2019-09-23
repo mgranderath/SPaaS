@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/mgranderath/SPaaS/common"
 )
 
-func start(name string, messages model.StatusChannel) {
+func (appService *AppService) start(name string, messages model.StatusChannel) {
 	app := model.NewApplication(name)
 	if !app.Exists() {
 		messages.SendError(errors.New("Does not exist"))
@@ -18,7 +18,7 @@ func start(name string, messages model.StatusChannel) {
 		return
 	}
 	messages.SendInfo("Starting application")
-	if err := StartContainer(common.SpaasName(name)); err != nil {
+	if err := appService.Docker.StartContainer(common.SpaasName(name)); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
@@ -28,13 +28,13 @@ func start(name string, messages model.StatusChannel) {
 }
 
 // StartApplication starts an application
-func StartApplication(c echo.Context) error {
+func (app *AppService) StartApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
 	log.Infof("application '%s' is being started", name)
 	messages := make(chan model.Status)
-	go start(name, messages)
+	go app.start(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			log.Errorf("application '%s' start failed with: %v", name, err)

@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"docker.io/go-docker/api/types/container"
@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	"github.com/mgranderath/SPaaS/common"
-	"github.com/mgranderath/SPaaS/config"
 	"github.com/mgranderath/SPaaS/server/model"
 	"github.com/pkg/errors"
 	"gopkg.in/src-d/go-git.v4"
@@ -32,13 +31,13 @@ func packageApplication(app *model.Application) error {
 	return nil
 }
 
-func buildImage(app *model.Application) error {
+func (appService *AppService) buildImage(app *model.Application) error {
 	f, err := os.Open(filepath.Join(app.Path, "package.tar"))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	response, err := BuildImage(f, common.SpaasName(app.Name))
+	response, err := appService.Docker.BuildImage(f, common.SpaasName(app.Name))
 	if err != nil {
 		return err
 	}
@@ -47,22 +46,22 @@ func buildImage(app *model.Application) error {
 	return nil
 }
 
-func buildContainer(app *model.Application) error {
+func (appService *AppService) buildContainer(app *model.Application) error {
 	name := app.Name
-	_ = RemoveContainer(common.SpaasName(name))
+	_ = appService.Docker.RemoveContainer(common.SpaasName(name))
 	labels := map[string]string{
 		"traefik.backend": common.SpaasName(name),
 		"traefik.enable":  "true",
 		"traefik.port":    "80",
 	}
-	if config.Cfg.Config.GetBool("useDomain") {
+	if appService.Config.Config.GetBool("useDomain") {
 		labels["traefik.frontend.rule"] =
-			fmt.Sprintf("Host:%s.%s", name, config.Cfg.Config.GetString("domain"))
+			fmt.Sprintf("Host:%s.%s", name, appService.Config.Config.GetString("domain"))
 	} else {
 		labels["traefik.frontend.rule"] =
 			fmt.Sprintf("PathPrefixStrip:/spaas/%s", name)
 	}
-	_, err := CreateContainer(
+	_, err := appService.Docker.CreateContainer(
 		container.Config{
 			Image: common.SpaasName(name) + ":latest",
 			ExposedPorts: nat.PortSet{
@@ -75,7 +74,7 @@ func buildContainer(app *model.Application) error {
 	return err
 }
 
-func Deploy(name string, messages model.StatusChannel) {
+func (appService *AppService) Deploy(name string, messages model.StatusChannel) {
 	app := model.NewApplication(name)
 	if !app.Exists() {
 		messages.SendError(errors.New("Does not exist"))
@@ -129,7 +128,7 @@ func Deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Packaging application")
 	messages.SendInfo("Building image")
-	err = buildImage(app)
+	err = appService.buildImage(app)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -137,7 +136,7 @@ func Deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Building image")
 	messages.SendInfo("Building container")
-	err = buildContainer(app)
+	err = appService.buildContainer(app)
 	if err != nil {
 		messages.SendError(err)
 		close(messages)
@@ -145,7 +144,7 @@ func Deploy(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Building container")
 	messages.SendInfo("Starting container")
-	if err := StartContainer(common.SpaasName(name)); err != nil {
+	if err := appService.Docker.StartContainer(common.SpaasName(name)); err != nil {
 		messages.SendError(err)
 		close(messages)
 		return
@@ -155,13 +154,13 @@ func Deploy(name string, messages model.StatusChannel) {
 }
 
 // DeployApplication deploys an application
-func DeployApplication(c echo.Context) error {
+func (app *AppService) DeployApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
 	log.Infof("application '%s' is being deployed", name)
 	messages := make(chan model.Status)
-	go Deploy(name, messages)
+	go app.Deploy(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			log.Errorf("application '%s' deployment failed with: %v", name, err)

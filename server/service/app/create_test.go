@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"github.com/mgranderath/SPaaS/server/model"
@@ -39,7 +39,7 @@ func TestItCreatesNewApp(t *testing.T) {
 	messages := make(chan model.Status)
 	name := "test"
 	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
-	config.Cfg.Config.Set("HOST_CONFIG_FOLDER", filepath.Join(common.HomeDir(), ".spaas"))
+	config.ConfigStore.Config.Set("HOST_CONFIG_FOLDER", filepath.Join(common.HomeDir(), ".spaas"))
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
 	go create(name, messages)

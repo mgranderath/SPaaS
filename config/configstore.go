@@ -17,9 +17,6 @@ type Store struct {
 	FileName string
 }
 
-// Cfg points to the current config
-var Cfg *Store
-
 var defaultConfig = map[string]interface{}{
 	"secret":            common.RandStringBytes(15),
 	"username":          "spaas",
@@ -32,8 +29,8 @@ var defaultConfig = map[string]interface{}{
 }
 
 // New creates a new store
-func New(FilePath string, FileName string) {
-	Cfg = &Store{
+func New(FilePath string, FileName string) *Store {
+	ConfigStore := &Store{
 		FilePath: FilePath,
 		FileName: FileName,
 	}
@@ -51,12 +48,13 @@ func New(FilePath string, FileName string) {
 		fmt.Println(err.Error())
 	}
 	config.AutomaticEnv()
-	Cfg.Config = config
+	ConfigStore.Config = config
+	return ConfigStore
 }
 
 // Save saves the configuration file
-func Save() error {
-	if err := Cfg.Config.WriteConfigAs(Cfg.FilePath + "/" + Cfg.FileName); err != nil {
+func (store *Store) Save() error {
+	if err := store.Config.WriteConfigAs(store.FilePath + "/" + store.FileName); err != nil {
 		return err
 	}
 	return nil

@@ -2,12 +2,12 @@ package model
 
 import (
 	"errors"
-	buildpackdocker "github.com/mgranderath/SPaaS/buildpack/docker"
-	buildpacknodejs "github.com/mgranderath/SPaaS/buildpack/nodejs"
-	buildpackpython "github.com/mgranderath/SPaaS/buildpack/python"
-	buildpackruby "github.com/mgranderath/SPaaS/buildpack/ruby"
 	"github.com/mgranderath/SPaaS/common"
 	"github.com/mgranderath/SPaaS/config"
+	buildpackdocker "github.com/mgranderath/SPaaS/server/buildpack/docker"
+	buildpacknodejs "github.com/mgranderath/SPaaS/server/buildpack/nodejs"
+	buildpackpython "github.com/mgranderath/SPaaS/server/buildpack/python"
+	buildpackruby "github.com/mgranderath/SPaaS/server/buildpack/ruby"
 	"os"
 	"path/filepath"
 	"strings"

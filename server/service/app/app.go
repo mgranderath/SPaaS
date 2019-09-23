@@ -1,7 +1,9 @@
-package controller
+package app
 
 import (
 	"bufio"
+	"github.com/mgranderath/SPaaS/config"
+	"github.com/mgranderath/SPaaS/server/docker"
 	"github.com/mgranderath/SPaaS/server/model"
 	"io"
 	"io/ioutil"
@@ -14,12 +16,24 @@ import (
 	"github.com/mgranderath/SPaaS/common"
 )
 
+type AppService struct {
+	Config *config.Store
+	Docker *docker.Docker
+}
+
+func NewAppService(ctx *model.AppDp) *AppService {
+	return &AppService{
+		Config: ctx.ConfigStore,
+		Docker: ctx.Docker,
+	}
+}
+
 var basePath = filepath.Join(common.HomeDir(), ".spaas")
 
 // GetLogs streams the log of a container
-func GetLogs(c echo.Context) error {
+func (app *AppService) GetLogs(c echo.Context) error {
 	name := c.Param("name")
-	resp, err := ContainerLogs(common.SpaasName(name))
+	resp, err := app.Docker.ContainerLogs(common.SpaasName(name))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
@@ -52,11 +66,11 @@ func GetLogs(c echo.Context) error {
 }
 
 // GetApplication returns a current application
-func GetApplication(c echo.Context) error {
+func (app *AppService) GetApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
-	container, err := InspectContainer(common.SpaasName(name))
+	container, err := app.Docker.InspectContainer(common.SpaasName(name))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, model.Status{
 			Type:    "error",
@@ -73,7 +87,7 @@ func GetApplication(c echo.Context) error {
 }
 
 // GetApplications returns a list of all applications
-func GetApplications(c echo.Context) error {
+func (app *AppService) GetApplications(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	appPath := filepath.Join(basePath, "applications")

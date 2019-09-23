@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func deleteApp(name string, messages model.StatusChannel) {
+func (appService *AppService) deleteApp(name string, messages model.StatusChannel) {
 	app := model.NewApplication(name)
 	if !common.Exists(app.Path) {
 		messages.SendError(errors.New("Does not exist"))
@@ -26,22 +26,22 @@ func deleteApp(name string, messages model.StatusChannel) {
 	}
 	messages.SendSuccess("Removing directories")
 	messages.SendInfo("Removing docker container")
-	_ = RemoveContainer(common.SpaasName(name))
+	_ = appService.Docker.RemoveContainer(common.SpaasName(name))
 	messages.SendSuccess("Removing docker container")
 	messages.SendInfo("Removing docker image")
-	_, _ = RemoveImage(common.SpaasName(name))
+	_, _ = appService.Docker.RemoveImage(common.SpaasName(name))
 	messages.SendSuccess("Removing docker image")
 	close(messages)
 }
 
 // DeleteApplication deletes the application
-func DeleteApplication(c echo.Context) error {
+func (app *AppService) DeleteApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
 	log.Infof("application '%s' is being deleted", name)
 	messages := make(chan model.Status)
-	go deleteApp(name, messages)
+	go app.deleteApp(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			log.Errorf("application '%s' deletion failed with: %v", name, err)

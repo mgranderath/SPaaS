@@ -1,3 +1,4 @@
+![Logo](docs/logo.svg)
 # SPaaS (Small Product as a Service)
 
 A lightweight Heroku like PaaS.
@@ -87,7 +88,7 @@ Add a file `spaas.json` in the project directory.
 
 ```json
 {
-  "start": <app-start-command>
+  "start": "<app-start-command>"
 }
 ```
 

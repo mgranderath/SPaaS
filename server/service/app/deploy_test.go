@@ -1,6 +1,7 @@
-package controller
+package app
 
 import (
+	"github.com/mgranderath/SPaaS/server/docker"
 	"github.com/mgranderath/SPaaS/server/model"
 	"os"
 	"path/filepath"
@@ -15,8 +16,8 @@ func TestItDeploysApp(t *testing.T) {
 	messages := make(chan model.Status)
 	name := "test"
 	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
-	InitDocker()
-	config.Cfg.Config.Set("HOST_CONFIG_FOLDER", filepath.Join(common.HomeDir(), ".spaas"))
+	docker.InitDocker()
+	config.ConfigStore.Config.Set("HOST_CONFIG_FOLDER", filepath.Join(common.HomeDir(), ".spaas"))
 	appPath := filepath.Join(basePath, "applications", name)
 	repoPath := filepath.Join(appPath, "repo")
 	// Setting up

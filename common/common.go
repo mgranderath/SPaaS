@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/labstack/gommon/log"
 	"io"
 	"math/rand"
 	"os"
@@ -31,9 +32,12 @@ func HomeDir() string {
 }
 
 // HashPassword hashes a password using bcrypt
-func HashPassword(password string) (string, error) {
+func HashPassword(password string) string {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
+	if err != nil {
+		log.Panic(err)
+	}
+	return string(bytes)
 }
 
 // CheckPasswordHash checks if a password hash is the password

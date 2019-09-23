@@ -1,19 +1,18 @@
 package routing
 
 import (
+	"github.com/mgranderath/SPaaS/server/model"
 	"log"
 
 	"docker.io/go-docker/api/types/container"
 	"docker.io/go-docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 	"github.com/mgranderath/SPaaS/common"
-	"github.com/mgranderath/SPaaS/config"
-	"github.com/mgranderath/SPaaS/server/controller"
 )
 
 // InitReverseProxy initializes the reverse proxy
-func InitReverseProxy() {
-	list, err := controller.ListContainers()
+func InitReverseProxy(app *model.AppDp) {
+	list, err := app.Docker.ListContainers()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,21 +24,21 @@ func InitReverseProxy() {
 		}
 	}
 	log.Println("Traefik is not installed but installing now")
-	if err := controller.PullImage("traefik:1.7-alpine"); err != nil {
+	if err := app.Docker.PullImage("traefik:1.7-alpine"); err != nil {
 		log.Fatal(err.Error())
 	}
 	cmd := []string{
 		"--docker", "--docker.watch",
 		"--defaultEntryPoints=http",
 		"--entryPoints=Name:http Address::80 Compress:off",
-		"--docker.domain=" + config.Cfg.Config.GetString("domain"),
+		"--docker.domain=" + app.ConfigStore.Config.GetString("domain"),
 		"--debug",
 		"--logLevel=DEBUG",
 	}
-	if config.Cfg.Config.GetBool("letsencrypt") {
+	if app.ConfigStore.Config.GetBool("letsencrypt") {
 		letsencrypt := []string{
 			"--acme",
-			"--acme.email=" + config.Cfg.Config.GetString("letsencryptEmail"),
+			"--acme.email=" + app.ConfigStore.Config.GetString("letsencryptEmail"),
 			"--acme.storage=/var/acme/acme.json",
 			"--acme.httpchallenge.entrypoint=http",
 			"--acme.entrypoint=https",
@@ -51,7 +50,7 @@ func InitReverseProxy() {
 		}
 		cmd = append(cmd, letsencrypt...)
 	}
-	containerID, err := controller.CreateContainer(
+	containerID, err := app.Docker.CreateContainer(
 		container.Config{
 			Image: "traefik:1.7-alpine",
 			ExposedPorts: nat.PortSet{
@@ -64,7 +63,7 @@ func InitReverseProxy() {
 		container.HostConfig{
 			Binds: []string{
 				"/var/run/docker.sock:/var/run/docker.sock",
-				config.Cfg.Config.GetString("acmePath") + ":/var/acme",
+				app.ConfigStore.Config.GetString("acmePath") + ":/var/acme",
 			},
 			PortBindings: nat.PortMap{
 				"80/tcp": []nat.PortBinding{
@@ -84,7 +83,7 @@ func InitReverseProxy() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if err := controller.StartContainer(containerID.ID); err != nil {
+	if err := app.Docker.StartContainer(containerID.ID); err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Println("Traefik is now installed")

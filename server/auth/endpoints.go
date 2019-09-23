@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/mgranderath/SPaaS/server/model"
 	"net/http"
 	"time"
 
@@ -11,30 +12,36 @@ import (
 	"github.com/mgranderath/SPaaS/config"
 )
 
+type AuthService struct {
+	Config *config.Store
+}
+
+func NewAuthService(ctx *model.AppDp) *AuthService {
+	return &AuthService{
+		Config: ctx.ConfigStore,
+	}
+}
+
 // ChangePassword allows for changing the password
-func ChangePassword(c echo.Context) error {
+func (service *AuthService) ChangePassword(c echo.Context) error {
 	newPassword := c.FormValue("password")
 	if len(newPassword) < 8 {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "password has to be at leat 8 characters",
 		})
 	}
-	hashedPassword, err := common.HashPassword(newPassword)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
-	}
-	config.Cfg.Config.Set("password", hashedPassword)
-	config.Save()
+	hashedPassword := common.HashPassword(newPassword)
+	service.Config.Config.Set("password", hashedPassword)
+	service.Config.Save()
 	return c.NoContent(http.StatusOK)
 }
 
 // Login is the endpoint for login
-func Login(c echo.Context) error {
+func (service *AuthService) Login(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
-	if username == config.Cfg.Config.GetString("username") && common.CheckPasswordHash(password, config.Cfg.Config.GetString("password")) {
+	if username == service.Config.Config.GetString("username") && common.CheckPasswordHash(password,
+		service.Config.Config.GetString("password")) {
 		// Create token
 		token := jwt.New(jwt.SigningMethodHS256)
 
@@ -46,7 +53,7 @@ func Login(c echo.Context) error {
 		claims["exp"] = time.Now().Add(time.Hour * 24 * 365).Unix()
 
 		// Generate encoded token and send it as response.
-		t, err := token.SignedString([]byte(config.Cfg.Config.GetString("secret")))
+		t, err := token.SignedString([]byte(service.Config.Config.GetString("secret")))
 		if err != nil {
 			return err
 		}
@@ -59,7 +66,7 @@ func Login(c echo.Context) error {
 }
 
 // GetToken generates a token for internal request use
-func GetToken() (string, error) {
+func (service *AuthService) GetToken() (string, error) {
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -68,7 +75,7 @@ func GetToken() (string, error) {
 	claims["admin"] = true
 	claims["exp"] = time.Now().Add(time.Hour * 24 * 365).Unix()
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(config.Cfg.Config.GetString("secret")))
+	t, err := token.SignedString([]byte(service.Config.Config.GetString("secret")))
 	if err != nil {
 		return "", err
 	}

@@ -1,7 +1,7 @@
-package controller
+package docker
 
 import (
-	"context"
+	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,27 +14,46 @@ import (
 	"docker.io/go-docker/api/types/network"
 )
 
+type dockerClient interface {
+	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig,
+		networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error)
+	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
+	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
+	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
+	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	ContainerLogs(ctx context.Context, container string, options types.ContainerLogsOptions) (io.ReadCloser, error)
+	ImagePull(ctx context.Context, refStr string, options types.ImagePullOptions) (io.ReadCloser, error)
+	ImageBuild(ctx context.Context, buildContext io.Reader,
+		options types.ImageBuildOptions) (types.ImageBuildResponse, error)
+	ImageRemove(ctx context.Context, imageID string,
+		options types.ImageRemoveOptions) ([]types.ImageDeleteResponseItem, error)
+}
+
 // Docker holds the connection information for the docker instance
 type Docker struct {
 	Ctx context.Context
-	Cli *client.Client
+	Cli dockerClient
 }
 
-var dock Docker
+var newDockerClient = func() (dockerClient, error) {
+	return client.NewEnvClient()
+}
 
 // InitDocker initializes the docker instance
-func InitDocker() {
-	dock = Docker{}
+func InitDocker() *Docker {
+	dock := Docker{}
 	dock.Ctx = context.Background()
-	Cli, err := client.NewEnvClient()
+	Cli, err := newDockerClient()
 	if err != nil {
 		log.Panic("Could not connect to Docker")
 	}
 	dock.Cli = Cli
+	return &dock
 }
 
 // ListContainers retrieves a list of all containers running on the system
-func ListContainers() ([]types.Container, error) {
+func (dock *Docker) ListContainers() ([]types.Container, error) {
 	list, err := dock.Cli.ContainerList(dock.Ctx, types.ContainerListOptions{
 		Quiet: true,
 		All:   true,
@@ -43,7 +62,7 @@ func ListContainers() ([]types.Container, error) {
 }
 
 // PullImage pulls an image from the docker registry
-func PullImage(name string) error {
+func (dock *Docker) PullImage(name string) error {
 	reader, err := dock.Cli.ImagePull(dock.Ctx, name, types.ImagePullOptions{})
 	defer reader.Close()
 	_, err = ioutil.ReadAll(reader)
@@ -51,7 +70,7 @@ func PullImage(name string) error {
 }
 
 // CreateContainer creates a container
-func CreateContainer(
+func (dock *Docker) CreateContainer(
 	containerConfig container.Config,
 	hostConfig container.HostConfig,
 	networkConfig network.NetworkingConfig,
@@ -61,44 +80,44 @@ func CreateContainer(
 }
 
 // StartContainer starts the container with id
-func StartContainer(id string) error {
+func (dock *Docker) StartContainer(id string) error {
 	return dock.Cli.ContainerStart(dock.Ctx, id, types.ContainerStartOptions{})
 }
 
 // StopContainer stops the container with id
-func StopContainer(id string) error {
+func (dock *Docker) StopContainer(id string) error {
 	zero := (0 * time.Microsecond)
 	return dock.Cli.ContainerStop(dock.Ctx, id, &zero)
 }
 
 // BuildImage builds an image from a tar stream
-func BuildImage(tarfile *os.File, name string) (types.ImageBuildResponse, error) {
+func (dock *Docker) BuildImage(tarfile *os.File, name string) (types.ImageBuildResponse, error) {
 	return dock.Cli.ImageBuild(dock.Ctx, tarfile, types.ImageBuildOptions{
 		Tags: []string{name},
 	})
 }
 
 // RemoveContainer removes an container
-func RemoveContainer(name string) error {
+func (dock *Docker) RemoveContainer(name string) error {
 	return dock.Cli.ContainerRemove(dock.Ctx, name, types.ContainerRemoveOptions{
 		Force: true,
 	})
 }
 
 // RemoveImage removes an image
-func RemoveImage(name string) ([]types.ImageDeleteResponseItem, error) {
+func (dock *Docker) RemoveImage(name string) ([]types.ImageDeleteResponseItem, error) {
 	return dock.Cli.ImageRemove(dock.Ctx, name, types.ImageRemoveOptions{
 		Force: true,
 	})
 }
 
 // InspectContainer inspects a container
-func InspectContainer(name string) (types.ContainerJSON, error) {
+func (dock *Docker) InspectContainer(name string) (types.ContainerJSON, error) {
 	return dock.Cli.ContainerInspect(dock.Ctx, name)
 }
 
 // ContainerLogs returns log of a container
-func ContainerLogs(name string) (io.ReadCloser, error) {
+func (dock *Docker) ContainerLogs(name string) (io.ReadCloser, error) {
 	return dock.Cli.ContainerLogs(dock.Ctx, name, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,

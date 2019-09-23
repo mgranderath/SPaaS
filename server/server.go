@@ -5,30 +5,20 @@ import (
 	"fmt"
 	"github.com/mgranderath/SPaaS/server/model"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo"
-	"github.com/mgranderath/SPaaS/common"
-	"github.com/mgranderath/SPaaS/config"
-	"github.com/mgranderath/SPaaS/server/controller"
 	"github.com/mgranderath/SPaaS/server/routing"
+	"github.com/mgranderath/SPaaS/server/service/app"
 )
 
+var appDp *model.AppDp
+
 func initialize(e *echo.Echo) {
-	config.New(filepath.Join(common.HomeDir(), ".spaas"), ".spaas.json")
-	if err := config.Save(); err != nil {
-		fmt.Println(err.Error())
-	}
-	config.Cfg.Config.WatchConfig()
-	config.Cfg.Config.OnConfigChange(func(_ fsnotify.Event) {
-		fmt.Println("Config file changed")
-	})
+	appDp = model.NewAppDp()
 	routing.GlobalMiddleware(e)
-	routing.SetupRoutes(e)
-	controller.InitDocker()
-	routing.InitReverseProxy()
+	routing.SetupRoutes(e, appDp)
+	routing.InitReverseProxy(appDp)
 }
 
 func main() {
@@ -44,7 +34,8 @@ func main() {
 		}
 		appName := flag.Args()[0]
 		messages := make(chan model.Status)
-		go controller.Deploy(appName, messages)
+		appService := app.NewAppService(appDp)
+		go appService.Deploy(appName, messages)
 		for elem := range messages {
 			fmt.Println(strings.ToUpper(elem.Type) + ": " + elem.Message)
 		}

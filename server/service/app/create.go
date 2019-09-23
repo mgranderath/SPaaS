@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"github.com/labstack/gommon/log"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/mgranderath/SPaaS/common"
-	"github.com/mgranderath/SPaaS/config"
 	"gopkg.in/src-d/go-git.v4"
 )
 
@@ -50,9 +49,9 @@ func createPostReceiveHook(name string, app *model.Application) error {
 	return nil
 }
 
-func create(name string, messages model.StatusChannel) {
+func (appService *AppService) create(name string, messages model.StatusChannel) {
 	app := model.NewApplication(name)
-	externalRepoPath := filepath.Join(config.Cfg.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
+	externalRepoPath := filepath.Join(appService.Config.Config.GetString("HOST_CONFIG_FOLDER"), "applications", name, "repo")
 	// Check if app already exists
 	if app.Exists() {
 		messages.SendError(errors.New("Already exists"))
@@ -96,13 +95,13 @@ func create(name string, messages model.StatusChannel) {
 }
 
 // CreateApplication creates a new application
-func CreateApplication(c echo.Context) error {
+func (app *AppService) CreateApplication(c echo.Context) error {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	name := c.Param("name")
 	log.Infof("application '%s' is being created", name)
 	messages := make(chan model.Status)
-	go create(name, messages)
+	go app.create(name, messages)
 	for elem := range messages {
 		if err := common.EncodeJSONAndFlush(c, elem); err != nil {
 			log.Errorf("application '%s' creation failed with: %v", name, err)
