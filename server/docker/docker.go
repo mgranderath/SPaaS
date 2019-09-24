@@ -14,7 +14,7 @@ import (
 	"docker.io/go-docker/api/types/network"
 )
 
-type dockerClient interface {
+type DockerClient interface {
 	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig,
 		networkingConfig *network.NetworkingConfig, containerName string) (container.ContainerCreateCreatedBody, error)
 	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
@@ -30,13 +30,13 @@ type dockerClient interface {
 		options types.ImageRemoveOptions) ([]types.ImageDeleteResponseItem, error)
 }
 
-// Docker holds the connection information for the docker instance
+// DockerClient holds the connection information for the docker instance
 type Docker struct {
 	Ctx context.Context
-	Cli dockerClient
+	Cli DockerClient
 }
 
-var newDockerClient = func() (dockerClient, error) {
+var newDockerClient = func() (DockerClient, error) {
 	return client.NewEnvClient()
 }
 
@@ -46,7 +46,7 @@ func InitDocker() *Docker {
 	dock.Ctx = context.Background()
 	Cli, err := newDockerClient()
 	if err != nil {
-		log.Panic("Could not connect to Docker")
+		log.Panic("Could not connect to DockerClient")
 	}
 	dock.Cli = Cli
 	return &dock

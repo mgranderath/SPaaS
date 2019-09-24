@@ -3,22 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/mgranderath/SPaaS/server/di"
 	"github.com/mgranderath/SPaaS/server/model"
+	"github.com/mgranderath/SPaaS/server/services"
 	"os"
 	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/mgranderath/SPaaS/server/routing"
-	"github.com/mgranderath/SPaaS/server/service/app"
 )
 
-var appDp *model.AppDp
-
 func initialize(e *echo.Echo) {
-	appDp = model.NewAppDp()
+	provider := di.NewProvider()
 	routing.GlobalMiddleware(e)
-	routing.SetupRoutes(e, appDp)
-	routing.InitReverseProxy(appDp)
+	routing.SetupRoutes(e, provider)
+	routing.InitReverseProxy(provider)
 }
 
 func main() {
@@ -34,7 +33,8 @@ func main() {
 		}
 		appName := flag.Args()[0]
 		messages := make(chan model.Status)
-		appService := app.NewAppService(appDp)
+		provider := di.NewProvider()
+		appService := services.NewAppService(provider.GetConfigRepository(), provider.GetDockerClient())
 		go appService.Deploy(appName, messages)
 		for elem := range messages {
 			fmt.Println(strings.ToUpper(elem.Type) + ": " + elem.Message)

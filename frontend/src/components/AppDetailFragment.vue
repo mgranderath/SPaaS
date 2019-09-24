@@ -143,8 +143,8 @@ export default {
   methods: {
     selectTab: function(tab) {
       this.tabSelected = tab;
-      if (tab == 1) {
-        this.logs = []
+      if (tab === 1) {
+        this.logs = [];
         this.logsApp();
       }
     },
@@ -178,20 +178,20 @@ export default {
             const responseObjects = decoded.split("\n");
             responseObjects
               .filter(value => {
-                return value != "";
+                return value !== "";
               })
               .forEach(value => {
-                const Error = JSON.parse(value).type == "error";
+                const Error = JSON.parse(value).type === "error";
                 if (Error) {
                   dispatch("alert/error", JSON.parse(value).message, {
                     root: true
                   });
                 }
-                const message = JSON.parse(value)["message"]
+                const message = JSON.parse(value)["message"];
                 const test = { 
-                  date: dayjs(message.substr(8, message.indexOf(" ") - 8)).format("YYYY-MM-DD HH:mm:ss"),
+                  date: dayjs(message.substr(0, message.indexOf(" "))).format("YYYY-MM-DD HH:mm:ss"),
                   message: message.substr(message.indexOf(" "))
-                }
+                };
                 ref.logs.push(test);
               });
 

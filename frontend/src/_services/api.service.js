@@ -1,4 +1,4 @@
-import { authHeader } from "../_helpers";
+import { authHeader, url } from "../_helpers";
 import { userService } from "../_services";
 
 export const apiService = {
@@ -17,7 +17,7 @@ function getAll() {
     method: "GET",
     headers: authHeader()
   };
-  return fetch(`/api/app`, requestOptions)
+  return fetch(url(`/api/app`), requestOptions)
     .then(response => {
       if (!response.ok) {
         if (response.status === 401) {
@@ -49,7 +49,7 @@ function createApp(name) {
     method: "POST",
     headers: authHeader()
   };
-  return fetch(`/api/app/${name}`, requestOptions)
+  return fetch(url(`/api/app/${name}`), requestOptions)
     .then(response => {
       if (!response.ok) {
         if (response.status === 401) {
@@ -73,7 +73,7 @@ function inspectApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `/api/app/${name}`,
+      url(`/api/app/${name}`),
     requestOptions
   ).then(response => {
     if (!response.ok) {
@@ -95,7 +95,7 @@ function deployApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `/api/app/${name}/deploy`,
+      url(`/api/app/${name}/deploy`),
     requestOptions
   ).then(response => {
     if (!response.ok) {
@@ -117,7 +117,7 @@ function stopApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `/api/app/${name}/stop`,
+      url(`/api/app/${name}/stop`),
     requestOptions
   )
   .then(response => {
@@ -140,7 +140,7 @@ function startApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `/api/app/${name}/start`,
+      url(`/api/app/${name}/start`),
     requestOptions
   )
   .then(response => {
@@ -162,7 +162,7 @@ function logs(name) {
     method: "GET",
     headers: authHeader()
   };
-  return fetch(`/api/app/${name}/logs`, requestOptions)
+  return fetch(url(`/api/app/${name}/logs`), requestOptions)
   .then(response => {
     if (!response.ok) {
       if (response.status === 401) {
@@ -186,7 +186,7 @@ function deleteApp(name) {
     headers: authHeader()
   };
   return fetch(
-    `/api/app/${name}`,
+      url(`/api/app/${name}`),
     requestOptions
   )
   .then(response => {

@@ -40,8 +40,8 @@ func HashPassword(password string) string {
 	return string(bytes)
 }
 
-// CheckPasswordHash checks if a password hash is the password
-func CheckPasswordHash(password, hash string) bool {
+// IsCorrectPassword checks if a password hash is the password
+func IsCorrectPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

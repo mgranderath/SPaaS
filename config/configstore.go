@@ -29,12 +29,14 @@ var defaultConfig = map[string]interface{}{
 }
 
 // New creates a new store
-func New(FilePath string, FileName string) *Store {
+func New() *Store {
+	filePath := filepath.Join(common.HomeDir(), ".spaas")
+	fileName := ".spaas.json"
 	ConfigStore := &Store{
-		FilePath: FilePath,
-		FileName: FileName,
+		FilePath: filePath,
+		FileName: fileName,
 	}
-	_, _ = os.OpenFile(FilePath+"/"+FileName, os.O_RDONLY|os.O_CREATE, 0666)
+	_, _ = os.OpenFile(filePath+"/"+fileName, os.O_RDONLY|os.O_CREATE, 0666)
 	err := os.MkdirAll(filepath.Join(common.HomeDir(), ".spaas", "acme"), os.ModePerm)
 	if err != nil {
 		log.Fatalln("Could not create acme folder")
@@ -43,12 +45,15 @@ func New(FilePath string, FileName string) *Store {
 	if err != nil {
 		log.Fatalln("Could not create applications folder")
 	}
-	config, err := ReadConfig(FilePath+"/"+FileName, defaultConfig)
+	config, err := ReadConfig(filePath+"/"+fileName, defaultConfig)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	config.AutomaticEnv()
 	ConfigStore.Config = config
+	if err := ConfigStore.Save(); err != nil {
+		fmt.Println(err.Error())
+	}
 	return ConfigStore
 }
 

@@ -1,4 +1,5 @@
-![Logo](docs/logo.svg)
+<img src="docs/logo.svg" width="400">
+
 # SPaaS (Small Product as a Service)
 
 A lightweight Heroku like PaaS.

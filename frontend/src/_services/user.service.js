@@ -1,5 +1,5 @@
 import { alertService } from "../_services";
-import { authHeader } from "../_helpers";
+import { authHeader, url } from "../_helpers";
 
 export const userService = {
   login,
@@ -19,7 +19,7 @@ function login(username, password) {
     body: formData
   };
 
-  return fetch(`/login`, requestOptions)
+  return fetch(url(`/login`), requestOptions)
     .then(handleResponse)
     .then(user => {
       // login successful if there's a jwt token in the response
@@ -47,7 +47,7 @@ function changePassword(newPassword) {
     headers: authHeader()
   };
 
-  return fetch(`/change-password`, requestOptions)
+  return fetch(url(`/change-password`), requestOptions)
     .then(response => {
       if (!response.ok) {
         if (response.status === 401) {
