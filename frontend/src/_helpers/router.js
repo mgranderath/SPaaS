@@ -3,14 +3,15 @@ import Router from 'vue-router';
 
 import HomePage from '../home/HomePage'
 import LoginPage from '../login/LoginPage'
+import SettingsPage from "../settings/SettingsPage";
 
 Vue.use(Router);
 
 export const router = new Router({
-  mode: 'history',
   routes: [
     { path: '/', component: HomePage },
     { path: '/login', component: LoginPage },
+    { path: '/settings', component: SettingsPage },
 
     // otherwise redirect to home
     { path: '*', redirect: '/' }
@@ -28,4 +29,4 @@ router.beforeEach((to, from, next) => {
   }
 
   next();
-})
+});

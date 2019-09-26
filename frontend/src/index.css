@@ -1,5 +1,13 @@
+@import "./assets/loading.css";
+@import "./assets/loading-btn.css";
+
 @tailwind base;
 
 @tailwind components;
 
 @tailwind utilities;
+
+body {
+    height: 100vh;
+}
+

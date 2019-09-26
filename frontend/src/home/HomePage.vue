@@ -1,52 +1,24 @@
 <template>
-  <div style="height: 100%;">
-    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
-      <div class="navbar-brand">
-        <div class="navbar-item">
-          <h2 class="title has-text-white">SPaaS</h2>
-        </div>
+  <div class="h-screen">
+    <NavBar v-bind:username="user.username" enable-search></NavBar>
 
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" v-on:click="toggleNav">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
+    <section class="sm:mx-8 h-auto flex flex-col justify-start">
+      <div class="flex justify-end">
+        <button class="bg-transparent flex items-baseline hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">
+          New <i class="fa fa-plus ml-2" aria-hidden="true"></i>
+        </button>
       </div>
-      <div class="navbar-menu" :class="{ 'is-active' : navOpen }">
-        <div class="navbar-end">
-          <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link">
-              {{ user.username }}
-            </a>
-            <div class="navbar-dropdown is-right">
-              <a class="navbar-item" v-on:click="openPasswordModal">
-                Change Password
-              </a>
-              <a class="navbar-item" v-on:click="logout">
-                Logout
-              </a>
-            </div>
-          </div>
+      <div class="flex flex-col justify-start shadow h-full my-4">
+        <div class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
+          <h1>Title</h1>
+          <h1>Other Title</h1>
+        </div>
+        <div class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
+          <h1>Title</h1>
+          <h1>Other Title</h1>
         </div>
       </div>
-    </nav>
-    <section class="section">
-        <div v-model="apps" v-show="apps.length == 0" class="level is-vcentered">
-            <div class="level-item has-text-centered">
-            <div>
-              <p class="title is-3">Create a App</p>
-              <a class="button is-link is-large text-top" v-on:click="openModal">Create</a>
-            </div>
-          </div>
-        </div>
-        <div class="columns" v-model="apps" v-show="apps.length > 0">
-            <AppListPanel/>
-            <AppDetailFragment/>
-        </div>
-        <CreateAppModal/>
-        <ChangePasswordModal/>>
     </section>
-    <vue-snotify></vue-snotify>
   </div>
 </template>
 
@@ -56,18 +28,23 @@ import CreateAppModal from "../components/CreateAppModal";
 import AppListPanel from "../components/AppListPanel";
 import AppDetailFragment from "../components/AppDetailFragment";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import NavBar from "../components/NavBar";
 
 export default {
   components: {
     CreateAppModal,
     AppListPanel,
     AppDetailFragment,
-    ChangePasswordModal
+    ChangePasswordModal,
+    NavBar
   },
   data() {
     return {
       navOpen: false,
     };
+  },
+  created() {
+    this.$store.dispatch("api/getAll");
   },
   computed: {
     ...mapGetters({
@@ -93,13 +70,4 @@ export default {
 </script>
 
 <style scoped>
-.columns,
-.section,
-.level {
-  height: 100%;
-}
-
-.text-top {
-  margin-top: 1rem;
-}
 </style>
