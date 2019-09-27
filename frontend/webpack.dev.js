@@ -40,9 +40,6 @@ module.exports = {
       template: './src/index.html'
     })
   ],
-  devServer: {
-    historyApiFallback: true
-  },
   externals: {
     // global app config object
     config: JSON.stringify({

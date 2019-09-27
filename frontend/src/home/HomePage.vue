@@ -9,7 +9,7 @@
         </button>
       </div>
       <div class="flex flex-col justify-start shadow h-full my-4">
-        <div v-for="app in apps" class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
+        <div v-for="app in apps" class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100 cursor-pointer" v-on:click="navigateToApp(app.name)">
           <h1>{{ app.name }}</h1>
           <h1>
             <Node v-if="app.type === 'node'" class="w-6 h-6 inline-block fill-current"/>
@@ -69,8 +69,8 @@ export default {
     toggleNav: function() {
       this.navOpen = !this.navOpen;
     },
-    appTypeToIcon: function (appType) {
-      return appTypeToIcon(appType);
+    navigateToApp: function (appName) {
+      this.$router.push(`/app/${appName}`).catch(err => console.log(err));
     }
   }
 };
