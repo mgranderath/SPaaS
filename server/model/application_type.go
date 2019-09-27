@@ -11,5 +11,5 @@ const (
 )
 
 func (appType ApplicationType) ToString() string {
-	return [...]string{"node", "ruby", "python", "docker"}[appType]
+	return [...]string{"undefined", "node", "ruby", "python", "docker"}[appType]
 }

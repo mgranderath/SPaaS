@@ -121,6 +121,7 @@ export const api = {
   },
   mutations: {
     getAllSuccess(state, list) {
+      console.log(list);
       state.apps = list;
     },
     appendMessage(state, item) {

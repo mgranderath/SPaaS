@@ -14,19 +14,19 @@ import (
 )
 
 type Application struct {
-	Name           string
-	Path           string
-	DeployPath     string
-	RepositoryPath string
-	Type           ApplicationType
-	Command        []string
+	Name           string          `json:"name"`
+	Path           string          `json:"-"`
+	DeployPath     string          `json:"-"`
+	RepositoryPath string          `json:"-"`
+	Type           ApplicationType `json:"type"`
+	Command        []string        `json:"command,omitempty"`
 }
 
 var TypeToFile = map[ApplicationType]string{
 	Python: "requirements.txt",
 	Node:   "package.json",
 	Ruby:   "Gemfile",
-	Docker: "Dockerfile",
+	//Docker: "Dockerfile",
 }
 
 var TypeToBuild = map[ApplicationType]func(string, []string) error{
@@ -62,7 +62,7 @@ func (app *Application) DetectType() ApplicationType {
 			return appType
 		}
 	}
-	return app.Type
+	return Undefined
 }
 
 func (app *Application) Build() error {

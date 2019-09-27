@@ -1,5 +1,6 @@
 import { authHeader, url } from "../_helpers";
 import { userService } from "../_services";
+import axios from "axios";
 
 export const apiService = {
   getAll,
@@ -13,35 +14,8 @@ export const apiService = {
 };
 
 function getAll() {
-  const requestOptions = {
-    method: "GET",
-    headers: authHeader()
-  };
-  return fetch(url(`/api/app`), requestOptions)
-    .then(response => {
-      if (!response.ok) {
-        if (response.status === 401) {
-          // auto logout if 401 response returned from api
-          logout();
-          location.reload(true);
-        }
-        const error = (data && data.message) || response.statusText;
-        return Promise.reject(error);
-      }
-      return response.text();
-    })
-    .then(text => {
-      const apps = [];
-      const responseObjects = text.split("\n");
-      responseObjects
-        .filter(value => {
-          return value != "";
-        })
-        .forEach(value => {
-          apps.push(JSON.parse(value)["message"]);
-        });
-      return apps;
-    });
+  return axios.get(url(`/api/app`), { headers: authHeader() })
+    .then(response => response.data);
 }
 
 function createApp(name) {

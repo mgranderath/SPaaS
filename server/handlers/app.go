@@ -168,16 +168,20 @@ func (provider *serviceProvider) GetApplications(c echo.Context) error {
 			Message: err.Error(),
 		})
 	}
-	for _, f := range files {
-		if err := common.EncodeJSONAndFlush(c, model.Status{
-			Type:    "info",
-			Message: f,
-		}); err != nil {
-			return c.JSON(http.StatusInternalServerError, model.Status{
-				Type:    "error",
-				Message: err.Error(),
-			})
+	applications := make([]map[string]string, len(files))
+	for index, f := range files {
+		app := model.NewApplication(f)
+		appType := app.DetectType()
+		applications[index] = map[string]string{
+			"name": app.Name,
+			"type": appType.ToString(),
 		}
+	}
+	if err := common.EncodeJSONAndFlush(c, applications); err != nil {
+		return c.JSON(http.StatusInternalServerError, model.Status{
+			Type:    "error",
+			Message: err.Error(),
+		})
 	}
 	return nil
 }

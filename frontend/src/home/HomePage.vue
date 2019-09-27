@@ -9,13 +9,13 @@
         </button>
       </div>
       <div class="flex flex-col justify-start shadow h-full my-4">
-        <div class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
-          <h1>Title</h1>
-          <h1>Other Title</h1>
-        </div>
-        <div class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
-          <h1>Title</h1>
-          <h1>Other Title</h1>
+        <div v-for="app in apps" class="flex flex-row justify-between px-8 py-4 border-b sm:px-16 lg:px-32 hover:bg-blue-100">
+          <h1>{{ app.name }}</h1>
+          <h1>
+            <Node v-if="app.type === 'node'" class="w-6 h-6 inline-block fill-current"/>
+            <Python v-else-if="app.type === 'python'" class="w-6 h-6 inline-block fill-current"/>
+            <Ruby v-else-if="app.type === 'ruby'" class="w-6 h-6 inline-block fill-current"/>
+          </h1>
         </div>
       </div>
     </section>
@@ -29,6 +29,9 @@ import AppListPanel from "../components/AppListPanel";
 import AppDetailFragment from "../components/AppDetailFragment";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import NavBar from "../components/NavBar";
+import Node from "../assets/node.svg";
+import Python from "../assets/python.svg";
+import Ruby from "../assets/ruby.svg";
 
 export default {
   components: {
@@ -36,7 +39,8 @@ export default {
     AppListPanel,
     AppDetailFragment,
     ChangePasswordModal,
-    NavBar
+    NavBar,
+    Node, Python, Ruby
   },
   data() {
     return {
@@ -64,6 +68,9 @@ export default {
     },
     toggleNav: function() {
       this.navOpen = !this.navOpen;
+    },
+    appTypeToIcon: function (appType) {
+      return appTypeToIcon(appType);
     }
   }
 };
